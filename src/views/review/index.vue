@@ -142,12 +142,12 @@ export default {
               this.list[i].template_type = response2.template_type
               if (i === this.list.length - 1) {
                 this.isdetail = true
+                console.log('aaddd', this.list)
               }
             })
           })
         }
       })
-      console.log('aaddd', this.list)
     },
     mark(index, row) { // need jump to with mission ID
       // console.log(row)
