@@ -14,9 +14,9 @@ export function getredoc(epochid) {
   })
 }
 
-export function getrelabel(docid, annotator_id) {
+export function getrelabel(docid, userid) {
   return request({
-    url: '/api/projects/docs/' + docid + '/reviewer/,' + annotator_id + '/annotations/',
+    url: '/api/projects/docs/' + docid + '/reviewer/' + userid + '/annotations/',
     method: 'get'
   })
 }

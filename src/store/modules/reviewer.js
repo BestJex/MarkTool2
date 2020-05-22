@@ -1,4 +1,4 @@
-import { getreepoch, getredoc, getrelabel, getentitys } from '@/api/reviewer'
+import { getreepoch, getredoc, getrelabel } from '@/api/reviewer'
 
 const state = {
   reviewerid: '',
@@ -35,9 +35,10 @@ const actions = {
       })
     })
   },
-  getredoc({ commit, state }) {
+  getredoc({ commit, state }, id) {
+    const epochid = id
     return new Promise((resolve, reject) => {
-      getredoc(state.epochid).then(response => {
+      getredoc(epochid).then(response => {
         // console.log(response)
         const data = response
         resolve(data)
@@ -46,20 +47,11 @@ const actions = {
       })
     })
   },
-  getrelabel({ commit, state }) {
+  getrelabel({ commit, state }, list) {
+    const docid = list.docid
+    const userid = list.userid
     return new Promise((resolve, reject) => {
-      getrelabel(state.templateid).then(response => {
-        // console.log(response)
-        const data = response
-        resolve(data)
-      }).catch(error => {
-        reject(error)
-      })
-    })
-  },
-  getentitys({ commit, state }) {
-    return new Promise((resolve, reject) => {
-      getentitys(state.projectid).then(response => {
+      getrelabel(docid, userid).then(response => {
         // console.log(response)
         const data = response
         resolve(data)

@@ -25,7 +25,7 @@
         min-width="65"
       >
         <template slot-scope="scope">
-          <span>{{ scope.row.id }}</span>
+          <span>{{ scope.row.id[0] }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -89,68 +89,85 @@
         </template>
       </el-table-column>
     </el-table>
-    <pagination
-      v-show="total>0"
-      :total="total"
-      @pagination="getList"
+    <el-pagination
+      v-show="list.length>0"
+      :total="list.length"
+      :current-page="page"
+      :page-size="limit"
+      layout="total, prev, pager, next, jumper"
+      :prev-click="prepage"
+      :next-click="nextpage"
+      @current-change="handleCurrentChange"
     />
   </div>
 </template>
 <script>
-import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
+// import Pagination from '@/components/Pagination' // Secondary package based on el-pagination
 export default {
-  components: { Pagination },
+  // components: { Pagination },
   data() {
     return {
+      isdetail: false,
+      userid: '',
       list: [
-        { id: 197, review_progress: { finish_num: '12', total_num: '230' }, missionName: '诈骗', state: 'ANNOTATING', project_type: 'NON_ACTIVE_LEARNING', project: 5, template: 9 },
-        { id: 197, review_progress: { finish_num: '12', total_num: '230' }, missionName: '诈骗', state: 'ANNOTATING', project_type: 'NON_ACTIVE_LEARNING', project: 5, template: 9 }
       ],
-      total: 100,
-      listLoading: true,
       page: 1,
-      limit: 100,
-      search: ''
+      limit: 10
     }
   },
   created() {
+    this.userid = this.$store.getters.userid
+    this.isdetail = false
     this.getList()
   },
   methods: {
+    handleCurrentChange(page) {
+      this.page = page
+    },
+    prepage() {
+      this.page--
+    },
+    nextpage() {
+      this.page++
+    },
     getList() {
-      this.$store.dispatch('reviewer/getreepoch', 2).then((response) => {
-        // console.log(response)
-        const list = response
-        for (let i = 0; i < list.length; i++) {
-          list[i].id = list[i].id[0]
-          this.$store.dispatch('project/getProject', list[i].project).then((response1) => {
-            const projectdet = response1
-            list[i].template = response1.template
-            list[i].missionName = projectdet.name
+      this.$store.dispatch('reviewer/getreepoch', this.userid).then((response) => {
+        this.list = response.reverse()
+        for (let i = 0; i < this.list.length; i++) {
+          // this.total = this.list.length
+          this.$store.dispatch('project/getProject', this.list[i].project).then((response1) => {
+            this.list[i].template = response1.template
+            this.list[i].missionName = response1.name
             this.$store.dispatch('project/getTemplatedet', response1.template).then((response2) => {
-              list[i].template_type = response2.template_type
+              this.list[i].template_type = response2.template_type
+              if (i === this.list.length - 1) {
+                this.isdetail = true
+              }
             })
-            if (i === list.length - 1) {
-              this.list = list
-            }
           })
         }
       })
+      console.log('aaddd', this.list)
     },
     mark(index, row) { // need jump to with mission ID
       // console.log(row)
       // console.log(this.$store.getters.userid)
       // var list = this.$store.dispatch('user/getEpoch')
       // console.log(list)
-      this.$router.push({
-        path: '/review/reviewing',
-        query: {
-          template: row.template,
-          state: row.state,
-          epochid: row.id,
-          template_type: row.template_type
-        }
-      })
+      if (this.isdetail) {
+        this.$router.push({
+          path: '/review/reviewing',
+          query: {
+            template: row.template,
+            state: row.state,
+            epochid: row.id[0],
+            template_type: row.template_type,
+            projectid: row.project
+          }
+        })
+      } else {
+        this.$message({ message: '请等待数据加载完毕' })
+      }
     },
     handleCommit(index) {
       this.list.splice(index, 1)

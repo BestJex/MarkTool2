@@ -57,7 +57,7 @@
                     <el-badge :value="badgefilter(entity.id)" class="item">
                       <div
                         class="labelstyle"
-                        :style="{background:entity.color,'font-size':'18px',display:'inline-block',margin:'5px','padding-left':'10px','padding-right':'10px','margin-left':'15px',}"
+                        :style="{background:entity.color,color:isLight(entity.color),'font-size':'18px',display:'inline-block',margin:'5px','padding-left':'10px','padding-right':'10px','margin-left':'15px',}"
                       >
                         {{ entity.name }}
                       </div>
@@ -1042,8 +1042,8 @@ const carouselPrefix = '?imageView2/2/h/440'
         log(1);
       },
       getDoc(){
-        this.$store.commit('user/SET_EPOCHID', this.epochid)
-        this.$store.dispatch('user/getDoc',this.epochid).then((response) =>{
+        // this.$store.commit('user/SET_EPOCHID', this.epochid)
+        this.$store.dispatch('reviewer/getredoc',this.epochid).then((response) =>{
           console.log(response);
           const list = response
           for (let i = 0; i < list.length; i++) {
@@ -1235,7 +1235,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             list:{
               doc:this.tableData[this.docid].id,
               user:this.userid,
-              role:2,
+              role:3,
               classification_template:this.labeledclass.id
             }
           }
@@ -1295,7 +1295,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           list:{
             doc:this.tableData[this.docid].id,
             user:this.userid,
-            role:2,
+            role:3,
             event_group_template:this.labeledevent.id
           }
         }
@@ -1367,7 +1367,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 // for (let index = 0; index < str.length-1; index++) {
                 //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                 // }
-                addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>') 
+                addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
 
                 // str_new += str[str.length-1]
                 // this.showdata = str_new;   
@@ -1485,7 +1485,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             docid:this.tableData[this.docid].id,
             userid:this.userid
           }
-          this.$store.dispatch('user/getuserlabel', data)
+          this.$store.dispatch('reviewer/getrelabel', data)
             .then((response) => {
               console.log('getlabelevent', response,this.options)
               if (response.length < 1) {
@@ -1559,7 +1559,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 // for (let index = 0; index < str.length-1; index++) {
                 //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                 // }
-                addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>') 
+                addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
 
                 // str_new += str[str.length-1]
                 // this.showdata = str_new;   
@@ -1581,6 +1581,38 @@ const carouselPrefix = '?imageView2/2/h/440'
             // }
         // }
       },
+      colorchange(color){
+        var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+        // 把颜色值变成小写
+        if (reg.test(color)) {
+          // 如果只有三位的值，需变成六位，如：#fff => #ffffff
+          if (color.length === 4) {
+            var colorNew = "#";
+            for (var i = 1; i < 4; i += 1) {
+              colorNew += color.slice(i, i + 1).concat(color.slice(i, i + 1));
+            }
+            color = colorNew;
+          }
+          // 处理六位的颜色值，转为RGB
+          var colorChange = [];
+          for (var i = 1; i < 7; i += 2) {
+            colorChange.push(parseInt("0x" + color.slice(i, i + 2)));
+          }
+          return "RGB(" + colorChange.join(",") + ")";
+        } else {
+          return color;
+        }
+      },
+      isLight(color){
+        var color1 = this.colorchange(color)
+        var RgbValue = color1.replace("RGB(", "").replace(")", "");
+        var rgb = RgbValue.split(",");
+        if (0.213 * rgb[0] +0.715 * rgb[1] +0.072 * rgb[2] >255 / 2){
+          return '#303133'
+        }else{
+          return '#ffffff'
+        }
+      },
       updatedoc(){
         if (this.template_type == 'NER') {
           this.showdata = this.showdata = this.tableData[this.docid].content
@@ -1601,7 +1633,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             docid:this.tableData[this.docid].id,
             userid:this.userid
           }
-          this.$store.dispatch('user/getuserlabel', data)
+          this.$store.dispatch('reviewer/getrelabel', data)
             .then((response) => {
               console.log('updatedoc',response)
               const list = response
@@ -1633,7 +1665,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   // for (let index = 0; index < str.length-1; index++) {
                   //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                   // }
-                  addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>') 
+                  addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
                   // str_new += str[str.length-1]
                   // this.showdata = str_new;   
                 }         
@@ -1657,7 +1689,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             docid:this.tableData[this.docid].id,
             userid:this.userid
           }
-          this.$store.dispatch('user/getuserlabel', data)
+          this.$store.dispatch('reviewer/getrelabel', data)
             .then((response) => {
               console.log('getlabelclass', response,this.options)
               if (response.length < 1) {
@@ -1748,7 +1780,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           //   this.showlabeledstandard()
           // }
           // this.activeName=''
-          this.$store.dispatch('user/getuserlabel', data)
+          this.$store.dispatch('reviewer/getrelabel', data)
             .then((response) => {
               console.log('updatedoc',response)
               const list = response.entities
@@ -1779,7 +1811,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   // for (let index = 0; index < str.length-1; index++) {
                   //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                   // }
-                  addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>') 
+                  addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
                   // str_new += str[str.length-1]
                   // this.showdata = str_new;   
                 }         
@@ -1824,7 +1856,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         var para = this.tableData[this.docid].content.split(this.selectpara)
         const start_offset = para[0].length+this.selectstart
         const end_offset = start_offset + content.length
-        var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
+        var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+';color:' +this.isLight(this.selectvalue[1].color)+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
         var str = this.showdata.split(this.selectpara);
         var str_new = "";
         str_new = str[0] + addpara + str[1]
@@ -1848,7 +1880,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             content:content,
             entity_template:this.selectvalue[1].id,
             user:this.userid,
-            role:2
+            role:3
           }
         }
         this.$store.dispatch('user/labelentity', data)
@@ -1858,7 +1890,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 docid:this.tableData[this.docid].id,
                 userid:this.userid
               }
-              this.$store.dispatch('user/getuserlabel', data)
+              this.$store.dispatch('reviewer/getrelabel', data)
                 .then((response) => {
                   console.log('updatedoc1',response)
                   const list = response.entities
@@ -1870,7 +1902,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   docid:this.tableData[this.docid].id,
                   userid:this.userid
                 }
-                this.$store.dispatch('user/getuserlabel', data)
+                this.$store.dispatch('reviewer/getrelabel', data)
                   .then((response) => {
                     console.log('updatedoc1',response)
                     const list = response
@@ -1912,7 +1944,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         var para = this.tableData[this.docid].content.split(this.selectpara)
         const start_offset = para[0].length+this.selectstart
         const end_offset = start_offset + content.length
-        var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
+        var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+';color:' +this.isLight(this.selectvalue[1].color)+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
         // console.log('add',addpara);
 
         // }
@@ -1943,7 +1975,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             entity_template:this.selectvalue[1].id,
             event_group_annotation:this.labeledevent1.id,
             user:this.userid,
-            role:2
+            role:3
           }
         }
         this.$store.dispatch('user/labelentity', data)
@@ -2004,7 +2036,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           list:{
             doc:this.tableData[this.docid].id,
             user:this.userid,
-            role:2,
+            role:3,
             relation_entity_template:this.selectstartentity.value.relation,
             start_entity:this.selectstartentity.value.startid,
             end_entity:this.selectendentity.value.endid
@@ -2086,7 +2118,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             id:this.tableData[this.docid].id,
             list:{
               user:this.userid,
-              role:2
+              role:3
             }
           }
           this.$store.dispatch('user/labelconfirm', data)
@@ -2143,7 +2175,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   docid:this.tableData[this.docid].id,
                   userid:this.userid
                 }
-                this.$store.dispatch('user/getuserlabel', data)
+                this.$store.dispatch('reviewer/getrelabel', data)
                   .then((response) => {
                     console.log('getlabelevent', response,this.options)
                     if (response.length < 1) {
@@ -2246,7 +2278,7 @@ const carouselPrefix = '?imageView2/2/h/440'
               docid:this.tableData[this.docid].id,
               userid:this.userid
             }
-            this.$store.dispatch('user/getuserlabel', data)
+            this.$store.dispatch('reviewer/getrelabel', data)
               .then((response) => {
                 console.log('updatedoc1',response)
                 const list = response.entities
@@ -2257,7 +2289,7 @@ const carouselPrefix = '?imageView2/2/h/440'
               docid:this.tableData[this.docid].id,
               userid:this.userid
             }
-            this.$store.dispatch('user/getuserlabel', data)
+            this.$store.dispatch('reviewer/getrelabel', data)
               .then((response) => {
                 console.log('updatedoc3',response)
                 const list = response
@@ -2411,7 +2443,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             // for (let index = 0; index < str.length-1; index++) {
             //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
             // }
-            addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'</div>') 
+            addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'</div>') 
             // str_new += str[str.length-1]
             // this.showdata = str_new;   
           }         
@@ -2457,7 +2489,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             // for (let index = 0; index < str.length-1; index++) {
             //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
             // }
-            addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'</div>') 
+            addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'</div>') 
             // str_new += str[str.length-1]
             // this.showdata = str_new;   
           }         
@@ -2503,7 +2535,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           // console.log(this.dicentity);
           for (let i = 0; i < this.submitdicentity.length; i++) {
             this.submitdicentity[i].user = this.userid
-            this.submitdicentity[i].role = 2
+            this.submitdicentity[i].role = 3
              if(this.template_type=='EVENT'){
               this.submitdicentity[i].event_group_annotation=this.labeledevent1.id
             }
@@ -2532,7 +2564,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           console.log(this.submitregularentity);
           for (let i = 0; i < this.submitregularentity.length; i++) {
             this.submitregularentity[i].user = this.userid
-            this.submitregularentity[i].role = 2
+            this.submitregularentity[i].role = 3
             if(this.template_type=='EVENT'){
               this.submitregularentity[i].event_group_annotation=this.labeledevent1.id
             }

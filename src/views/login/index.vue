@@ -66,6 +66,11 @@
     <el-dialog title="注册" style="text-align:center" :visible.sync="showDialog">
       <div> 用户名：<el-input v-model="reguser" style="width:40%;margin:10px" placeholder="请输入用户名" /></div>
       <div>密码：<el-input v-model="regpass" style="width:40%;margin:10px" placeholder="请输入密码" show-password /></div>
+      <div>身份：
+        <el-checkbox-group v-model="selectrole" style="margin:15px">
+          <el-checkbox v-for="item in role" :key="item.id" :label="item.id">{{ item.name }}</el-checkbox>
+        </el-checkbox-group>
+      </div>
       <el-button type="primary" @click="register">注册</el-button>
     </el-dialog>
   </div>
@@ -74,7 +79,7 @@
 <script>
 import { validUsername } from '@/utils/validate'
 // import SocialSign from './components/SocialSignin'
-
+import router from '@/router'
 export default {
   name: 'Login',
   // components: { SocialSign },
@@ -94,6 +99,17 @@ export default {
       }
     }
     return {
+      selectrole: [],
+      role: [
+        {
+          name: '标注者',
+          id: '2'
+        },
+        {
+          name: '审核者',
+          id: '3'
+        }
+      ],
       reguser: '',
       regpass: '',
       loginForm: {
@@ -168,8 +184,19 @@ export default {
             .then((response) => {
               // console.log('success',response);
               this.$store.commit('user/SET_NAME', this.loginForm.username)
-              this.$router.push({ path: '/' })
-              this.loading = false
+              const { roles } = this.$store.dispatch('user/getRoles')
+                .then((response1) => {
+                  const { roles } = response1
+                  this.$store.dispatch('permission/generateRoutes', roles)
+                    .then((response2) => {
+                      const accessRoutes = response2
+                      console.log('access', accessRoutes)
+
+                      router.addRoutes(accessRoutes)
+                      this.$router.push({ path: '/' })
+                      this.loading = false
+                    })
+                })
             })
             .catch(() => {
               // console.log('fail',error);
@@ -183,13 +210,24 @@ export default {
       })
     },
     register() {
-      if (this.regpass === '' || this.reguser === '') {
+      console.log(this.selectrole)
+
+      // console.log('role',role);
+
+      if (this.regpass === '' || this.reguser === '' || this.selectrole.length === 0) {
         this.$message({ message: '信息未填完整', type: 'error' })
       } else {
+        var role = ''
+        for (let i = 0; i < this.selectrole.length; i++) {
+          role += this.selectrole[i]
+          if (i < this.selectrole.length - 1) {
+            role += ','
+          }
+        }
         const data = {
           user_name: this.reguser,
           password: this.regpass,
-          role_list: '2'
+          role_list: role
         }
         this.$store.dispatch('user/register', data)
           .then(() => {

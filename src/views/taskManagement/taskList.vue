@@ -178,7 +178,7 @@ export default {
       this.$store.dispatch('project/getallProject')
         .then((response) => {
           console.log(response)
-          this.list = response
+          this.list = response.reverse()
         })
         .catch(() => {
           console.log('error')

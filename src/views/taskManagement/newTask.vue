@@ -97,14 +97,14 @@
           >
             {{ form1.specification.labelType }}
           </el-form-item> -->
-          <!-- <el-form-item
+          <el-form-item
             label="每轮标注数量"
             prop="labelTotalNumber"
           >
             <div style="width:40%">
               <el-input v-model="form2.labelTotalNumber" />
-            </div> -->
-          <!-- </el-form-item> -->
+            </div>
+          </el-form-item>
           <el-form-item label="待标注文件">
             <el-upload
               ref="upload2"
@@ -341,7 +341,7 @@
               />
             </div>
           </el-form-item>
-          <!-- <el-button
+          <el-button
             circle
             size="mini"
             type="primary"
@@ -359,9 +359,9 @@
               <el-select v-model="reviewer.id">
                 <el-option
                   v-for="(item,index1) in reviewerlabel"
-                  :key="item.name"
-                  :label="item.name"
-                  :value="index1"
+                  :key="index1"
+                  :label="item.username"
+                  :value="item.id"
                 />
               </el-select>
               <el-button
@@ -372,7 +372,7 @@
                 @click.prevent="removereviewer(index)"
               />
             </div>
-          </el-form-item> -->
+          </el-form-item>
           <el-form-item label="答案文件（可选）">
             <el-upload
               ref="upload3"
@@ -508,6 +508,17 @@ export default {
         .catch(() => {
           console.log('error')
         })
+      const data1 = {
+        role_id: 3
+      }
+      this.$store.dispatch('user/getuserinfo', data1)
+        .then((response1) => {
+          console.log(response1)
+          this.reviewerlabel = response1
+        })
+        .catch(() => {
+          console.log('error')
+        })
     },
     showfile(file, fileList) {
       console.log('1', this.form2, this.form5, this.form4, fileList)
@@ -589,7 +600,7 @@ export default {
       for (let i = 0; i < this.form2.file.length; i++) {
         formData.append('file', this.form2.file[i].raw)
       }
-      // formData.append('ann_num_per_epoch', this.form2.labelTotalNumber)
+      formData.append('ann_num_per_epoch', this.form2.labelTotalNumber)
       // console.log(111, formData.get('file'))
       const data = {
         formdata: formData,
@@ -711,6 +722,12 @@ export default {
           break
         }
       }
+      for (let k = 0; k < this.revformtem.length; k++) {
+        if (this.revformtem[k].id === '') {
+          isann = false
+          break
+        }
+      }
       if (isann) {
         const formData = new window.FormData()
         if (this.form4.file.length > 0) {
@@ -727,21 +744,21 @@ export default {
           }
         }
         console.log('annformtem', this.annformtem)
-
+        console.log('revformtem', this.revformtem)
         console.log(annatator)
-        // var reviewer = ''
-        // for (let i = 0; i < this.revformtem.length; i++) {
-        //   var h = this.revformtem[i].id
-        //   reviewer += this.reviewerlabel[h].id
-        //   if (i < this.revformtem.length - 1) {
-        //     reviewer += ','
-        //   }
-        // }
+        var reviewer = ''
+        for (let i = 0; i < this.revformtem.length; i++) {
+          // var h = this.revformtem[i].id
+          reviewer += this.revformtem[i].id
+          if (i < this.revformtem.length - 1) {
+            reviewer += ','
+          }
+        }
         // formData.append('annotators', annatator)
-        // formData.append('reviewers', reviewer)
+        formData.append('reviewers', reviewer)
 
         formData.append('annotators', annatator)
-        formData.append('reviewers', '1')
+        // formData.append('reviewers', '1')
         const data = {
           formdata: formData,
           id: this.projectid

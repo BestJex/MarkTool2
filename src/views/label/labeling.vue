@@ -12,6 +12,7 @@
           v-for="data in tableData"
           :key="data.id"
           class="box-card asidelist"
+          :body-style="docid===data.key?'background-color:#eeeeee':'background-color:#ffffff'"
           @click.native="aside_click(data.key)"
         >
           {{ data.content }}
@@ -57,7 +58,7 @@
                     <el-badge :value="badgefilter(entity.id)" class="item">
                       <div
                         class="labelstyle"
-                        :style="{background:entity.color,'font-size':'18px',display:'inline-block',margin:'5px','padding-left':'10px','padding-right':'10px','margin-left':'15px',}"
+                        :style="{background:entity.color,color:isLight(entity.color),'font-size':'18px',display:'inline-block',margin:'5px','padding-left':'10px','padding-right':'10px','margin-left':'15px',}"
                       >
                         {{ entity.name }}
                       </div>
@@ -67,171 +68,6 @@
                 </el-collapse-item>
               </el-collapse>
             </el-tab-pane>
-            <!-- <el-tab-pane
-              v-if="template_type=='NULL'"
-              label="自动标注"
-              name="自动标注"
-            >
-              <div class="user-images">
-                <el-carousel
-                  :interval="6000"
-                  type="card"
-                  height="220px"
-                >
-                  <el-carousel-item
-                    v-for="item in carouselImages"
-                    :key="item"
-                  >
-                    <img
-                      :src="item+carouselPrefix"
-                      class="image"
-                    >
-                  </el-carousel-item>
-                </el-carousel>
-              </div>
-              <div style="text-align:center">
-                <div style="float: left;">
-                  <el-button
-                    type="info"
-                    @click="Dictionary_annotation=true"
-                  >
-                    字典标注
-                  </el-button>
-                </div>
-                <div style="float: right;">
-                  <el-button
-                    type="info"
-                    @click="Event_annotation=true"
-                  >
-                    事件标注
-                  </el-button>
-                </div>
-                <el-button
-                  type="info"
-                  @click="Model_annotation=true"
-                >
-                  模型标注
-                </el-button>
-              </div>
-              <el-dialog
-                title="字典标注"
-                :visible.sync="Dictionary_annotation"
-                width="500px"
-                :before-close="handleClose"
-              >
-                <el-table
-                  ref="multipleTable"
-                  :data="entityTableData"
-                  tooltip-effect="dark"
-                  height="350px"
-                  @selection-change="handleSelectionChange"
-                >
-                  <el-table-column
-                    type="selection"
-                    width="55"
-                  />
-                  <el-table-column
-                    label="实体名称"
-                    width="200"
-                  >
-                    <template slot-scope="scope">
-                      {{ scope.row.entityContent }}
-                    </template>
-                  </el-table-column>
-                  <el-table-column
-                    prop="entityType"
-                    label="实体类型"
-                    width="200"
-                  />
-                </el-table>
-                <span
-                  slot="footer"
-                  class="dialog-footer"
-                >
-                  <el-button @click="Dictionary_annotation = false">取 消</el-button>
-                  <el-button
-                    type="primary"
-                    @click="handleDictionaryAnnotation()"
-                  >标注所选项</el-button>
-                </span>
-              </el-dialog>
-              <el-dialog
-                title="模型标注"
-                :visible.sync="Model_annotation"
-                width="500px"
-                :before-close="handleClose"
-              >
-                <el-table
-                  :data="modelTableData"
-                  height="400px"
-                  style="width: 100%"
-                >
-                  <el-table-column
-                    label="模型ID"
-                    prop="modelID"
-                  />
-                  <el-table-column
-                    label="模型名称"
-                    prop="modelName"
-                  />
-                  <el-table-column align="right">
-                    <template slot-scope="scope">
-                      <el-button
-                        size="mini"
-                        @click="handleModelAnnotation(scope.$index, scope.row)"
-                      >
-                        标注
-                      </el-button>
-                    </template>
-                  </el-table-column>
-                </el-table>
-              </el-dialog>
-              <el-dialog
-                title="事件标注"
-                :visible.sync="Event_annotation"
-                width="500px"
-                :before-close="handleClose"
-              >
-                <el-table
-                  ref="multipleTable"
-                  :data="entityTableData"
-                  tooltip-effect="dark"
-                  height="350px"
-                  @selection-change="handleSelectionChange"
-                >
-                  <el-table-column
-                    type="selection"
-                    width="55"
-                  />
-                  <el-table-column
-                    label="实体名称"
-                    width="200"
-                  >
-                    <template slot-scope="scope">
-                      {{ scope.row.entityContent }}
-                    </template>
-                  </el-table-column>
-                  <el-table-column
-                    label="实体类型"
-                    width="200"
-                  >
-                    <template slot-scope="scope">
-                      {{ scope.row.entityType }}
-                    </template>
-                  </el-table-column>
-                </el-table>
-                <span
-                  slot="footer"
-                  class="dialog-footer"
-                >
-                  <el-button @click="Event_annotation = false">取 消</el-button>
-                  <el-button
-                    type="primary"
-                    @click="handleEventAnnotation()"
-                  >标注所选项</el-button>
-                </span>
-              </el-dialog>
-            </el-tab-pane> -->
             <el-tab-pane
               v-if="template_type=='RE'"
               label="关系标注"
@@ -1367,7 +1203,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 // for (let index = 0; index < str.length-1; index++) {
                 //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                 // }
-                addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>') 
+                addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
 
                 // str_new += str[str.length-1]
                 // this.showdata = str_new;   
@@ -1559,7 +1395,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 // for (let index = 0; index < str.length-1; index++) {
                 //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                 // }
-                addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>') 
+                addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
 
                 // str_new += str[str.length-1]
                 // this.showdata = str_new;   
@@ -1580,6 +1416,38 @@ const carouselPrefix = '?imageView2/2/h/440'
             }
             // }
         // }
+      },
+      colorchange(color){
+        var reg = /^#([0-9a-fA-f]{3}|[0-9a-fA-f]{6})$/;
+        // 把颜色值变成小写
+        if (reg.test(color)) {
+          // 如果只有三位的值，需变成六位，如：#fff => #ffffff
+          if (color.length === 4) {
+            var colorNew = "#";
+            for (var i = 1; i < 4; i += 1) {
+              colorNew += color.slice(i, i + 1).concat(color.slice(i, i + 1));
+            }
+            color = colorNew;
+          }
+          // 处理六位的颜色值，转为RGB
+          var colorChange = [];
+          for (var i = 1; i < 7; i += 2) {
+            colorChange.push(parseInt("0x" + color.slice(i, i + 2)));
+          }
+          return "RGB(" + colorChange.join(",") + ")";
+        } else {
+          return color;
+        }
+      },
+      isLight(color){
+        var color1 = this.colorchange(color)
+        var RgbValue = color1.replace("RGB(", "").replace(")", "");
+        var rgb = RgbValue.split(",");
+        if (0.213 * rgb[0] +0.715 * rgb[1] +0.072 * rgb[2] >255 / 2){
+          return '#303133'
+        }else{
+          return '#ffffff'
+        }
       },
       updatedoc(){
         if (this.template_type == 'NER') {
@@ -1633,7 +1501,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   // for (let index = 0; index < str.length-1; index++) {
                   //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                   // }
-                  addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>') 
+                  addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
                   // str_new += str[str.length-1]
                   // this.showdata = str_new;   
                 }         
@@ -1779,7 +1647,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   // for (let index = 0; index < str.length-1; index++) {
                   //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                   // }
-                  addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>') 
+                  addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
                   // str_new += str[str.length-1]
                   // this.showdata = str_new;   
                 }         
@@ -1824,7 +1692,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         var para = this.tableData[this.docid].content.split(this.selectpara)
         const start_offset = para[0].length+this.selectstart
         const end_offset = start_offset + content.length
-        var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
+        var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+';color:' +this.isLight(this.selectvalue[1].color)+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
         var str = this.showdata.split(this.selectpara);
         var str_new = "";
         str_new = str[0] + addpara + str[1]
@@ -1912,7 +1780,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         var para = this.tableData[this.docid].content.split(this.selectpara)
         const start_offset = para[0].length+this.selectstart
         const end_offset = start_offset + content.length
-        var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
+        var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+';color:' +this.isLight(this.selectvalue[1].color)+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
         // console.log('add',addpara);
 
         // }
@@ -2411,7 +2279,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             // for (let index = 0; index < str.length-1; index++) {
             //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
             // }
-            addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'</div>') 
+            addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'</div>') 
             // str_new += str[str.length-1]
             // this.showdata = str_new;   
           }         
@@ -2457,7 +2325,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             // for (let index = 0; index < str.length-1; index++) {
             //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
             // }
-            addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'</div>') 
+            addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'</div>') 
             // str_new += str[str.length-1]
             // this.showdata = str_new;   
           }         
