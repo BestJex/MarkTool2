@@ -1856,7 +1856,6 @@ const carouselPrefix = '?imageView2/2/h/440'
               //   index=0
               // }
               var color =''
-              var color1 = ''
               if(index==1){
                 addlist.push(this.entityinput[i])
                 for (let k = 0; k < this.options.length; k++) {
@@ -1867,6 +1866,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   }
                 }
                 var whilenum = 0
+                var color1 = ''
                 if (i<this.entityinput.length-1) {
                   var newcontent = ''
                   var color1 = ''
@@ -1874,6 +1874,9 @@ const carouselPrefix = '?imageView2/2/h/440'
                   while(this.entityinput[i+1].start_offset<this.entityinput[n].end_offset){
                     whilenum++
                     var starttem = this.entityinput[i+1].start_offset - this.entityinput[n].start_offset
+                    if(endtem){
+                      newcontent+=content.slice(endtem,starttem)
+                    }
                     var endtem = this.entityinput[i+1].end_offset - this.entityinput[n].start_offset
                     if(n===i){
                       newcontent+=content.slice(0,starttem)
