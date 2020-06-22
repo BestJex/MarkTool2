@@ -1,24 +1,34 @@
 <template>
   <el-container class="labelcontainer" style="height: auto">
-    <el-aside
-      width="400px"
-      style="background-color: white "
-    >
-      <div class="aside-container">
-        <div class="aside-title">
-          标注数据列表
+    <el-container style="min-width:300px">
+      <el-aside
+        style="position: relative;top: 5px;background-color: white;font-size:15px;min-width:340px;min-height: 300px;max-height:400px"
+      >
+        <div class="aside-container">
+          <div class="aside-title">
+            标注数据列表
+          </div>
+          <el-card
+            v-for="(data,index) in tableData"
+            :key="data.id"
+            class="box-card asidelist"
+            :body-style="docid===data.key?'background-color:#eeeeee':'background-color:#ffffff'"
+            @click.native="aside_click(data.key)"
+          >
+            {{ index+1 }} : {{ data.content }}
+          </el-card>
         </div>
-        <el-card
-          v-for="data in tableData"
-          :key="data.id"
-          class="box-card asidelist"
-          :body-style="docid===data.key?'background-color:#eeeeee':'background-color:#ffffff'"
-          @click.native="aside_click(data.key)"
-        >
-          {{ data.content }}
-        </el-card>
-      </div>
-    </el-aside>
+      </el-aside>
+      <br>
+      <el-card class="standardcard">
+        <div slot="header" class="clearfix" style="">
+          <span>已标注的标准</span>
+        </div>
+        <div v-for="st in labeledstandardfilter" :key="st.content" class="standardcontainer">
+          '{{ st.content }}' - {{ st.standard_name }}
+        </div>
+      </el-card>
+    </el-container>
     <el-container class="right-container">
       <div
         class="components-container"
@@ -40,13 +50,12 @@
               label="实体统计"
               name="实体统计"
             >
-              <el-collapse
+              <div
                 v-for="(item) in options"
                 :key="item.id"
-                v-model="activeName2"
-                accordion
               >
-                <el-collapse-item
+                {{ item.label }}:
+                <div
                   :title="item.label"
                   :name="item.label"
                 >
@@ -57,16 +66,16 @@
                   >
                     <el-badge :value="badgefilter(entity.id)" class="item">
                       <div
-                        class="labelstyle"
-                        :style="{background:entity.color,color:isLight(entity.color),'font-size':'18px',display:'inline-block',margin:'5px','padding-left':'10px','padding-right':'10px','margin-left':'15px',}"
+                        class="labelstyle labelstyle1"
+                        :style="{background:entity.color,color:isLight(entity.color),'font-size':'12px',display:'inline-block',margin:'5px','padding-left':'10px','padding-right':'10px','margin-left':'15px',}"
                       >
                         {{ entity.name }}
                       </div>
                     </el-badge>
                     <!-- <el-color-picker v-model="entity.color" disabled /> -->
                   </div>
-                </el-collapse-item>
-              </el-collapse>
+                </div>
+              </div>
             </el-tab-pane>
             <el-tab-pane
               v-if="template_type=='RE'"
@@ -167,7 +176,7 @@
                 style="display:inline-block"
               >
                 <div
-                  class="labelstyle"
+                  class="labelstyle labelstyle1"
                   :style="{background:cls.color,'font-size':'20px',display:'inline-block',margin:'10px'}"
                 >
                   {{ cls.name }}
@@ -180,7 +189,7 @@
               name="标记标准"
             >
               <el-collapse
-                v-for="(item) in options"
+                v-for="item in options"
                 :key="item.id"
                 v-model="activeName"
                 accordion
@@ -223,13 +232,13 @@
                     circle
                     @click="addstandard()"
                   />
-                  <el-button @click="addstandardoption">添加标准名称</el-button>
-                  <div>
+                  <el-button @click="addstandardoption(item.children)">管理标准名称</el-button>
+                  <!-- <div>
                     已标记的标准：
                   </div>
-                  <div v-for="st in labeledstandard" :key="st.content">
+                  <div v-for="st in labeledstandardfilter" :key="st.content">
                     {{ st.content }} - {{ st.standard_name }}
-                  </div>
+                  </div> -->
                 </el-collapse-item>
               </el-collapse>
             </el-tab-pane>
@@ -248,11 +257,11 @@
                 <el-option
                   v-for="dic in dicoptionfilter"
                   :key="dic.id"
-                  :label="dic.name"
+                  :label="dic.group_name+'-'+dic.name"
                   :value="dic.id"
                 />
               </el-select>
-              <el-button @click="showadddic=true">添加字典</el-button>
+              <el-button @click="showadddic=true">字典管理</el-button>
               <el-button @click="confirmdicuse=true">应用此字典</el-button>
             </el-tab-pane>
             <el-tab-pane
@@ -274,74 +283,126 @@
                   :value="regular.re.id"
                 />
               </el-select>
-              <el-button @click="showaddregular=true">添加正则表达式</el-button>
+              <el-button @click="showaddregular=true">管理正则表达式</el-button>
               <el-button @click="confirmregularuse=true">应用此正则匹配</el-button>
             </el-tab-pane>
           </el-tabs>
         </el-card>
         <el-dialog
-          title="添加标准名称"
+          title="管理标准名称"
           :visible.sync="dialogVisible"
           width="30%"
           :before-close="handleClose"
         >
-          <el-select
-            v-model="dialogentity"
-            placeholder="请选择添加标准的实体"
-          >
-            <el-option
-              v-for="entity in dialogoption"
-              :key="entity.id"
-              :label="entity.label"
-              :value="entity.name"
+          <template>
+            <el-radio v-model="standardguanli" label="1">添加</el-radio>
+            <el-radio v-model="standardguanli" label="2">删除</el-radio>
+          </template>
+          <div v-if="standardguanli=='2'">
+            <el-select
+              v-model="deletestandardid"
+              placeholder="请选择删除的标准"
+            >
+              <el-option
+                v-for="standard in deletestlist"
+                :key="standard.id"
+                :label="standard.label+'-'+standard.standard_name"
+                :value="standard.id"
+              />
+            </el-select>
+          </div>
+          <div v-if="standardguanli=='1'">
+            <el-select
+              v-model="dialogentity"
+              placeholder="请选择添加标准的实体"
+            >
+              <el-option
+                v-for="entity in dialogoption"
+                :key="entity.id"
+                :label="entity.label"
+                :value="entity.id"
+              />
+            </el-select>
+            <el-input
+              v-model="dialoginput"
+              placeholder="请输入标准"
+              clearable
             />
-          </el-select>
-          <el-input
-            v-model="dialoginput"
-            placeholder="请输入标准"
-            clearable
-          />
+          </div>
           <span slot="footer" class="dialog-footer">
             <el-button @click="dialogVisible = false">取 消</el-button>
-            <el-button type="primary" @click="dialogadd">确 定</el-button>
+            <el-button v-if="standardguanli=='1'" type="primary" @click="dialogadd">确 定</el-button>
+            <el-button v-if="standardguanli=='2'" type="primary" @click="dialogdelete">删 除</el-button>
           </span>
         </el-dialog>
         <el-dialog
-          title="添加字典"
+          title="字典管理"
           :visible.sync="showadddic"
           width="30%"
           :before-close="handleClose"
         >
-          <el-input
-            v-model="dicinputname"
-            placeholder="请输入字典名称"
-            clearable
-          />
-          <el-select
-            v-model="dicinputentity"
-            placeholder="请选择实体模板"
-          >
-            <el-option
-              v-for="entity in dicinputfilter"
-              :key="entity.id"
-              :label="entity.label"
-              :value="entity.id"
+          <template>
+            <el-radio v-model="dicguanli" label="1">添加</el-radio>
+            <el-radio v-model="dicguanli" label="2">删除</el-radio>
+          </template>
+          <div v-if="dicguanli=='2'">
+            <el-select
+              v-model="deletedicid"
+              placeholder="选择实体字典"
+            >
+              <el-option
+                v-for="dic in dicoptionfilter"
+                :key="dic.id"
+                :label="dic.group_name+'-'+dic.name"
+                :value="dic.id"
+              />
+            </el-select>
+          </div>
+          <div v-if="dicguanli=='1'">
+            <el-input
+              v-model="dicinputname"
+              placeholder="请输入字典名称"
+              clearable
             />
-          </el-select>
-          <el-select
-            v-model="dicinputstname"
-            placeholder="请选择实体模板标准名称"
-          >
-            <el-option
-              v-for="standard in dicinputstnamefilter"
-              :key="standard.id"
-              :label="standard.standard_name"
-              :value="standard.id"
-            />
-          </el-select>
+            <el-select
+              v-model="dicinputentity"
+              placeholder="请选择实体模板"
+            >
+              <el-option
+                v-for="entity in dicinputfilter"
+                :key="entity.id"
+                :label="entity.groupname+'-'+entity.label"
+                :value="entity.id"
+              />
+            </el-select>
+            <el-select
+              v-model="dicinputstname"
+              placeholder="请选择标准名称(可选)"
+              clearable
+            >
+              <el-option
+                v-for="standard in dicinputstnamefilter"
+                :key="standard.id"
+                :label="standard.standard_name"
+                :value="standard.id"
+              />
+            </el-select>
+          </div>
+
           <span slot="footer" class="dialog-footer">
             <el-button @click="showadddic = false">取 消</el-button>
-            <el-button type="primary" @click="dicadd">确 定</el-button>
+            <el-button v-if="dicguanli=='1'" type="primav-ifry" @click="dicadd">确 定</el-button>
+            <el-button v-if="dicguanli=='2'" type="primav-ifry" @click="dicdelete">删 除</el-button>
+          </span>
+        </el-dialog>
+        <el-dialog
+          title="是否确认删除此事件"
+          width="30%"
+          :visible.sync="deleteevent1"
+        >
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="deleteevent1 = false">取 消</el-button>
+            <el-button type="primary" @click="deleteevent">确 定</el-button>
           </span>
         </el-dialog>
         <el-dialog
@@ -379,55 +440,75 @@
           </span>
         </el-dialog>
         <el-dialog
-          title="添加正则表达式"
+          title="管理正则表达式"
           :visible.sync="showaddregular"
           width="30%"
           :before-close="handleClose"
         >
-          <el-input
-            v-model="regularinputname"
-            placeholder="请输入正则表达式"
-            style="margin-bottom:10px"
-            clearable
-          />
+          <template>
+            <el-radio v-model="regularguanli" label="1">添加</el-radio>
+            <el-radio v-model="regularguanli" label="2">删除</el-radio>
+          </template>
+          <div v-if="regularguanli=='2'">
+            <el-select
+              v-model="deleteregularid"
+              placeholder="选择正则表达式"
+            >
+              <el-option
+                v-for="regular in regularoptionfilter"
+                :key="regular.re.id"
+                :label="regular.re.content"
+                :value="regular.re.id"
+              />
+            </el-select>
+          </div>
+          <div v-if="regularguanli=='1'">
+            <el-input
+              v-model="regularinputname"
+              placeholder="请输入正则表达式"
+              style="margin-bottom:10px"
+              clearable
+            />
 
-          <el-form
-            label-width="100px"
-            class="demo-ruleForm"
-          >
-            <el-form-item
-              v-for="(regular,index) in regulartem"
-              :key="index"
-              label="选择对应实体"
-              prop="regulartem"
+            <el-form
+              label-width="100px"
+              class="demo-ruleForm"
             >
-              <div>
-                <el-select v-model="regular.id">
-                  <el-option
-                    v-for="(item,index1) in dicinputfilter"
-                    :key="index1"
-                    :label="item.name"
-                    :value="item.id"
+              <el-form-item
+                v-for="(regular,index) in regulartem"
+                :key="index"
+                label="选择对应实体"
+                prop="regulartem"
+              >
+                <div>
+                  <el-select v-model="regular.id">
+                    <el-option
+                      v-for="(item,index1) in dicinputfilter"
+                      :key="index1"
+                      :label="item.groupname+'-'+item.name"
+                      :value="item.id"
+                    />
+                  </el-select>
+                  <el-button
+                    type="danger"
+                    size="mini"
+                    icon="el-icon-delete"
+                    circle
+                    @click.prevent="removeregulartem(index)"
                   />
-                </el-select>
-                <el-button
-                  type="danger"
-                  size="mini"
-                  icon="el-icon-delete"
-                  circle
-                  @click.prevent="removeregulartem(index)"
-                />
-              </div>
-            </el-form-item>
-            <el-button
-              circle
-              size="mini"
-              type="primary"
-              @click="newregulartem()"
-            >
-              <i class="el-icon-plus" />
-            </el-button>
-          </el-form>
+                </div>
+              </el-form-item>
+              <el-button
+                circle
+                size="mini"
+                type="primary"
+                @click="newregulartem()"
+              >
+                <i class="el-icon-plus" />
+              </el-button>
+            </el-form>
+          </div>
+
           <!-- <el-select
             v-model="regularinputentity"
             placeholder="请选择正则对应的实体"
@@ -441,8 +522,9 @@
           </el-select> -->
           <span slot="footer" class="dialog-footer">
             <el-button @click="showaddregular = false">取 消</el-button>
-            <el-button type="primary" @click="regularmatch">直接匹配</el-button>
-            <el-button type="primary" @click="regularadd">保存</el-button>
+            <el-button v-if="regularguanli=='1'" type="primary" @click="regularmatch">直接匹配</el-button>
+            <el-button v-if="regularguanli=='1'" type="primary" @click="regularadd">保存</el-button>
+            <el-button v-if="regularguanli=='2'" type="primary" @click="regulardelete">删除</el-button>
           </span>
         </el-dialog>
         <el-card
@@ -465,7 +547,7 @@
             </el-select>
             <div v-if="labeledclass!=''">
               <div
-                class="labelstyle"
+                class="labelstyle labelstyle1"
                 :style="{background:labeledclass.color,'font-size':'20px'}"
               >
                 {{ labeledclass.name }}<div
@@ -513,7 +595,7 @@
                   :value="{name:item.name,id:item.id}"
                 />
               </el-select>
-              <el-button type="danger" icon="el-icon-delete" circle @click="deleteevent" />
+              <el-button type="danger" icon="el-icon-delete" circle @click="(labeledevent1 != '{}'&&labeledevent1.name!='')?deleteevent1=true:deleteevent1=false" />
             </div>
             <!-- <div v-if="labeledevent!=''">
               事件组：<div
@@ -531,7 +613,7 @@
           </div>
           <div
             class="labelcontent1"
-            v-html="showdata_pre+showdata+showdata_back"
+            v-html="showdata_pre + changebr(showdata)+showdata_back"
           />
           <div
             v-if="template_type=='NER'||template_type=='RE'"
@@ -556,6 +638,10 @@
               @change="eventselectchange"
             />
           </div>
+          <el-tooltip v-model="tipsshow" manual="true" class="hovertips" effect="dark" placement="top-start">
+            <div slot="content">{{ showtipscontent1() }}<br>{{ showtipscontent2() }}</div>
+            <el-button class="hoveritem">隐藏</el-button>
+          </el-tooltip>
         </el-card>
         <!-- <el-dialog
               title="新增标准"
@@ -642,6 +728,61 @@ const carouselPrefix = '?imageView2/2/h/440'
         Kanban,splitPane
     },
     computed:{
+      labeledstandardfilter(){
+        var filterArr =[]
+        // setTimeout(() => {    
+          console.log('stf',this.entityinput,this.options,this.itemlabel,this.template_type);
+          
+          if(this.template_type==='EVENT'){
+            for (let i = 0; i < this.options.length; i++) {
+              if (this.options[i].label===this.itemlabel) {
+                for (let j = 0; j < this.entityinput.length; j++) {
+                  if(this.entityinput[j].standard != null){
+                    for (let k = 0; k < this.options[i].children.length; k++) {
+                      if((this.options[i].children[k].id===this.entityinput[j].entity_template)&&this.options[i].children[k].standard){
+                        for (let l = 0; l < this.options[i].children[k].standard.length; l++) {
+                          if (this.options[i].children[k].standard[l].id===this.entityinput[j].standard) {
+                            filterArr.push({
+                              standard_name:this.options[i].children[k].standard[l].standard_name,
+                              content:this.entityinput[j].content
+                            })
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }else{
+            for (let i = 0; i < this.options.length; i++) {
+              // if (this.options[i].label===this.itemlabel) {
+                for (let j = 0; j < this.entityinput.length; j++) {
+                  if(this.entityinput[j].standard != null&&this.options[i].children){
+                    for (let k = 0; k < this.options[i].children.length; k++) {
+                      if((this.options[i].children[k].id===this.entityinput[j].entity_template)&&this.options[i].children[k].standard){
+                        for (let l = 0; l < this.options[i].children[k].standard.length; l++) {
+                          if (this.options[i].children[k].standard[l].id===this.entityinput[j].standard) {
+                            filterArr.push({
+                              standard_name:this.options[i].children[k].standard[l].standard_name,
+                              content:this.entityinput[j].content
+                            })
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              // }
+            }
+          }
+          console.log('lastshow',filterArr);
+          
+          return filterArr
+        // }, 500);
+        
+        
+      },
 			filterentitys(){
         var filterArr =[]
         if(this.template_type!='EVENT'){
@@ -662,19 +803,35 @@ const carouselPrefix = '?imageView2/2/h/440'
             }
           }
         }
-        console.log('filter',filterArr,this.entityinput,this.itemlabel);
+        console.log('filter',this.itemlabel,filterArr,this.entityinput);
         
 				return filterArr;
       },
       dicinputfilter(){
         var filterArr =[]
-        for (let i = 0; i < this.options.length; i++) {
-          for (let j = 0; j < this.options[i].children.length; j++) {
-            filterArr.push(this.options[i].children[j])
+          if(this.template_type!='EVENT'){
+            for (let i = 0; i < this.options.length; i++) {
+                  for (let j = 0; j < this.options[i].children.length; j++) {
+                    this.options[i].children[j].groupname = this.options[i].label
+                      filterArr.push(this.options[i].children[j])
+                  }
+              }
           }
-        }
-        console.log('addregular',filterArr);
-        
+          else{
+            console.log('awdawd',this.labeledevent1);
+            if (JSON.stringify(this.labeledevent1) != "{}"&&this.labeledevent1.name!="") {
+              var eventname = this.labeledevent1.name.split(this.labeledevent1.id)
+              for (let i = 0; i < this.options.length; i++) {
+                  for (let j = 0; j < this.options[i].children.length; j++) {
+                    this.options[i].children[j].groupname = this.options[i].label
+                    if (this.options[i].label===eventname[0]) {
+                      filterArr.push(this.options[i].children[j])
+                    }
+                  }
+              }
+            }
+          }
+          console.log('addregular',filterArr);
         return filterArr
       },
       dicoptionfilter(){
@@ -688,9 +845,9 @@ const carouselPrefix = '?imageView2/2/h/440'
             console.log('dicoptionfilter',this.labeledevent1);
             
             var eventname = this.labeledevent1.name.split(this.labeledevent1.id)
-            for (let i = 0; i < this.options.length; i++) {
-              if(this.options[i].name===eventname[0]){
-                filterArr = this.dicoption
+            for (let i = 0; i < this.dicoption.length; i++) {
+              if(this.dicoption[i].group_name===eventname[0]){
+                filterArr.push(this.dicoption[i])
               }
             }
           }
@@ -703,7 +860,17 @@ const carouselPrefix = '?imageView2/2/h/440'
           filterArr = this.regularoption
         }else{
           if (JSON.stringify(this.labeledevent1) != "{}") {
-            filterArr = this.regularoption
+            var eventname = this.labeledevent1.name.split(this.labeledevent1.id)
+            console.log('adadad',this.regularoption);
+            // filterArr = this.regularoption
+            for (let i = 0; i < this.regularoption.length; i++) {
+              for (let j = 0; j < this.regularoption[i].entity_template_list.length; j++) {
+                if(this.regularoption[i].entity_template_list[j].group_name===eventname[0]){
+                  filterArr.push(this.regularoption[i])
+                  break
+                }
+              }
+            }
           }
         }
         return filterArr
@@ -711,10 +878,14 @@ const carouselPrefix = '?imageView2/2/h/440'
       dicinputstnamefilter(){
         var filterArr = []
         console.log('字典选择标准',this.options,this.dicinputentity);
-        for (let i = 0; i < this.options.length; i++) {
-          for (let j = 0; j < this.options[i].children.length; j++) {
-            if(this.options[i].children[j].id===this.dicinputentity){
-              filterArr = this.options[i].children[j].standard
+        if (this.options.length>0) {
+          for (let i = 0; i < this.options.length; i++) {
+            if (this.options[i].children) {          
+              for (let j = 0; j < this.options[i].children.length; j++) {
+                if(this.options[i].children[j].id===this.dicinputentity){
+                  filterArr = this.options[i].children[j].standard
+                }
+              }
             }
           }
         }
@@ -731,6 +902,15 @@ const carouselPrefix = '?imageView2/2/h/440'
       this.template_type = this.$route.query.template_type
       this.projectid = this.$route.query.projectid
       this.userid = this.$store.getters.userid
+      console.log('projectid',this.projectid);
+      
+      // console.log('getters', this.$store.state);
+      // console.log(JSON.stringify(this.$store.state.tagsView));
+      
+      // let obj = new Object();
+      
+      
+      
       console.log('template', this.template_type);
       
       this.getDoc()
@@ -753,7 +933,11 @@ const carouselPrefix = '?imageView2/2/h/440'
       var mouseY=0;
       var mouseX1=0;
       var mouseY1=0;
+      
       this.$nextTick(function () { //检测鼠标事件
+        
+        // console.log('text',$('div.labelstyle').text());
+         
         $('div.labelcontent1').mousemove(function(e) { //鼠标位置
             e = e || window.event;
             mouseX = e.pageX || e.clientX + document.body.scroolLeft;
@@ -762,16 +946,45 @@ const carouselPrefix = '?imageView2/2/h/440'
               mouseX1 = e.pageX - $("div.labelcontent1").offset().left;
               mouseY1 = e.pageY - $("div.labelcontent1").offset().top;
             }
-              
+            $(".hoveritem").css({
+            position:"absolute",
+            top:mouseY-80,
+            left:mouseX1,
+          })
         });
-        $("div.labelcontent1").on('mouseup','.labelcontent',function () {
-          console.log(mouseX,mouseY);
-          
-          
-          
-          console.log('labelmouse',mouseX1,mouseY1);
-          
 
+        $('div.labelcontent1').on("mouseenter",".labelstyle",function(e){ 
+          if (that.tabactiveName!='字典匹配'&&that.tabactiveName!='正则匹配') {
+            setTimeout(() => {
+              console.log('hover',mouseY-80,mouseX1);
+              console.log($(this)[0]);
+              
+              console.log($(this)[0].attributes.name.value);
+              
+              // var content = $(this)[0].innerText;
+              // content = content.split('\nx');
+              that.tipscontent = $(this)[0].attributes.name.value
+              that.tipsshow = true
+            }, 200);
+          }
+          // console.log($(".hoveritem"));
+          
+          // $(".hoveritem").trigger('mouseover');
+        })
+        $('div.labelcontent1').on("mouseleave",".labelstyle",function(e){ 
+          // $('.hoveritem').trigger('mouseout');
+          setTimeout(() => {
+            that.tipsshow = false
+            $(".hoveritem").css({
+              position:"absolute",
+              top:mouseY-80,
+              left:mouseX1,
+            })
+          }, 222);
+        })
+        $("div.labelcontent1").on('mouseup','.labelcontent',function () {
+          console.log(mouseX,mouseY); 
+          console.log('labelmouse',mouseX1,mouseY1);
           $("div.block").css({
             position:"absolute",
             top:mouseY-120,
@@ -779,29 +992,145 @@ const carouselPrefix = '?imageView2/2/h/440'
           })
           console.log('topleft',mouseY-120,mouseX-560);
                     
-         if(that.tabactiveName!='字典匹配'&&that.tabactiveName!='正则匹配'&&window.getSelection().toString()!=""){
+         if(that.tabactiveName!='字典匹配'&&that.tabactiveName!='正则匹配'&&window.getSelection().toString()!=""&&!window.getSelection().toString().match(/^\s+$/)){
           // var para = that.tableData[that.docid].content.split(window.getSelection().anchorNode.wholeText)
           // const start_offset = para[0].length+window.getSelection().anchorOffset
           // const end_offset = start_offset + window.getSelection().toString().length
           // console.log(111,para,window.getSelection().toString(),start_offset,end_offset);
-          
-            if(window.getSelection().anchorNode.data===window.getSelection().focusNode.data){
+            console.log(window.getSelection().toString().match(/^\s+$/));
+            console.log('papa',window.getSelection())
+            
+            // if(window.getSelection().anchorNode.data===window.getSelection().focusNode.data){
+            var judgestart = 0
+            // if(!(window.getSelection().anchorNode.nextSibling&&window.getSelection().anchorNode.nextSibling.className==='deletelabel'||window.getSelection().focusNode.nextSibling&&window.getSelection().focusNode.nextSibling.className==='deletelabel')){   
+            if(window.getSelection().anchorNode.nodeName===window.getSelection().focusNode.nodeName){
               that.selecttext = window.getSelection().toString();
               console.log(window.getSelection().anchorOffset,window.getSelection().focusOffset,window.getSelection());
-              that.selectstart = window.getSelection().anchorOffset
-              that.selectend = window.getSelection().focusOffset
-              if(that.selectstart>that.selectend){
-                var temp = that.selectend
-                that.selectend = that.selectstart
-                that.selectstart = temp
+              if(window.getSelection().anchorNode.data===window.getSelection().focusNode.data){
+                that.selectstart = window.getSelection().anchorOffset
+                that.selectend = window.getSelection().focusOffset
+                if(that.selectstart>that.selectend){
+                  var temp = that.selectend
+                  that.selectend = that.selectstart
+                  that.selectstart = temp
+                }
               }
-              that.selectpara = window.getSelection().anchorNode.wholeText
-              var para = that.tableData[that.docid].content.split(window.getSelection().anchorNode.wholeText)
-              const start_offset = para[0].length+that.selectstart
+              else{
+                var anchor =  window.getSelection().anchorNode
+                var pretext = ''
+                var nexttext = ''
+                if (anchor.nextSibling) {
+                  anchor = anchor.nextSibling
+                  while(anchor){
+                    if (anchor.nodeName==='#text') {
+                      nexttext = anchor.data
+                      break
+                    }
+                    else{
+                      anchor=anchor.nextSibling
+                    }
+                  }
+                  if(nexttext===window.getSelection().focusNode.data){
+                    judgestart = 1  //起始在前
+                  }
+                }
+                anchor =  window.getSelection().anchorNode
+                if (anchor.previousSibling) {
+                  anchor = anchor.previousSibling
+                  while(anchor){
+                    if (anchor.nodeName==='#text') {
+                      pretext = anchor.data
+                      break
+                    }
+                    else{
+                      anchor=anchor.previousSibling
+                    }
+                  }
+                  if(pretext===window.getSelection().focusNode.data){
+                    judgestart = 2   //起始在后
+                  }
+                }
+                if(judgestart===1){
+                  that.selectstart = window.getSelection().anchorOffset
+                }
+                else if(judgestart===2){
+                  that.selectstart = window.getSelection().focusOffset
+                }
+                console.log('judgestart',that.selectstart,judgestart);
+              }
+              
+              
+              // that.selectpara = window.getSelection().anchorNode.wholeText
+              that.selectpara = ''
+              console.log('jssss',judgestart);
+              
+              if (judgestart===0||judgestart===1&&window.getSelection().anchorNode.previousSibling||judgestart===2&&window.getSelection().focusNode.previousSibling) {
+                var windowselect = ''
+                // console.log('zahuishi?',judgestart);
+                
+                if (judgestart === 1) {
+                  windowselect = window.getSelection().anchorNode.previousSibling
+                } else if(judgestart === 2){
+                  windowselect = window.getSelection().focusNode.previousSibling
+                } else{
+                  windowselect = window.getSelection().anchorNode.previousSibling
+                }
+                if (judgestart===0&&window.getSelection().anchorNode.parentElement) {
+                  if (window.getSelection().anchorNode.parentElement.className==='labelstyle') {
+                    windowselect = window.getSelection().anchorNode.parentNode.previousSibling
+                    // console.log('jinrule');
+                    
+                  }
+                }
+                console.log('12212',windowselect);
+                
+                while(windowselect){
+                  if(windowselect.nodeName==='DIV'){
+                    that.selectpara+=windowselect.firstChild.data
+                    var windowselect1 = windowselect.firstChild.nextSibling
+                    while(windowselect1.className!='deletelabel'){
+                      if(windowselect1.nodeName==='BR'){
+                        that.selectpara+='\n'
+                      }else if(windowselect1.nodeName==='#text'){
+                        that.selectpara+=windowselect1.data
+                      }
+                      if (windowselect1.nextSibling) {
+                        windowselect1 = windowselect1.nextSibling
+                      }
+                      else{
+                        break
+                      }
+                    }
+                  }else if(windowselect.nodeName==='#text'){
+                    that.selectpara+=windowselect.data
+                  }else if(windowselect.nodeName==='BR'){
+                    that.selectpara+='\n'
+                  }
+                  if (windowselect.previousSibling) {
+                    windowselect = windowselect.previousSibling
+                  }
+                  else{
+                    break
+                  }
+                }
+              }
+              var para = that.selectpara
+              // console.log('test1',that.tableData[that.docid].content);
+              
+              console.log('addaaa',that.selectpara);
+              console.log(that.tableData[that.docid].content);
+              
+              // console.log('adad',para);
+              // if (!para[0]) {
+              //   para[0] = para[para.length-1]
+              // }
+              const start_offset = that.selectpara.length+that.selectstart
               const end_offset = start_offset + window.getSelection().toString().length
+              console.log('aaa',start_offset,end_offset);
+              
               if(that.ischongfulabel(start_offset,end_offset)){
                 setTimeout(() => {
-                  if(that.template_type === 'RE'||that.template_type === 'NER'||(that.template_type==='EVENT' && that.labeledevent!='')){
+                  if(that.template_type === 'RE'||that.template_type === 'NER'||(that.template_type==='EVENT' && that.labeledevent1.name!='')){
                     $("div.block .el-input").trigger("click")
                   }
                 }, 200);
@@ -827,28 +1156,132 @@ const carouselPrefix = '?imageView2/2/h/440'
         $("div.labelcontent1").on('mouseup','.deletelabel',function () {
           // console.log('12331',$(this).parent());
           // console.log($(this).parent()[0].outerHTML);
-          var deletestr =that.escape2Html($(this).parent()[0].outerHTML);
-          var content = $(this).parent()[0].innerText;
-          content = content.split('\nx');
-        //   var str =  that.showdata.split(deletestr);
-        //   console.log(deletestr,content,str);
-        //   var new_str = ""
-        //   for (let i = 0; i < str.length-1; i++) { // 将删除的词的样式去除后连接起来
-        //     new_str+=str[i]+content[0]
-        //   }
-        //   new_str +=str[str.length-1];
-        // //  console.log(deletestr,str,new_str)
-        //   that.showdata = new_str;
-          console.log('content',content[0]);
-          that.deleteentity(content[0],deletestr)
-          console.log('afterdeleteinput',that.entityinput);
-          
+          if(that.tabactiveName==='字典匹配')
+          {
+            console.log($(this).parent());
+            
+            var deletestr =that.escape2Html($(this).parent()[0].outerHTML);
+            var content = $(this).parent()[0].innerText;
+            content = content.split('\nx');
+            console.log('content',content[0]);
+            that.deletedicmatch($(this).parent()[0].attributes.name.value)
+          }else if(that.tabactiveName==='正则匹配')
+          {
+            console.log($(this).parent());
+            
+            var deletestr =that.escape2Html($(this).parent()[0].outerHTML);
+            var content = $(this).parent()[0].innerText;
+            content = content.split('\nx');
+            console.log('content',content[0]);
+            that.deleteregmatch($(this).parent()[0].attributes.name.value)
+          }
+          else
+          {
+            that.tipsshow = false
+            var deletestr =that.escape2Html($(this).parent()[0].outerHTML);
+            var content = $(this).parent()[0].innerText;
+            content = content.split('\nx');
+            console.log('content',$(this).parent()[0].attributes.name.value);
+            that.deleteentity($(this).parent()[0].attributes.name.value)
+            console.log('afterdeleteinput',that.entityinput);
+          }
         })
       })
     },
     methods: {
-      ischongfulabel(start,end){
+    // judgeoptions(){
+    //   for (let i = 0; i < this.options.length; i++) {
+    //     if (!this.options[i].children) {
+    //       return false
+    //     }
+    //     for (let j = 0; j < this.options[i].children.length; j++) {
+    //       if (!this.options[i].children[j].standard) {
+    //         return false
+    //       }
+    //     }
+    //   }
+    //   return true
+    // },
+      showtipscontent1(){
+        var standard = ''
+        var id = ''
+        var name = ''
+        var stname = ''
+        console.log(this.tipscontent,this.entityinput);
+        
         for (let i = 0; i < this.entityinput.length; i++) {
+          if(Number(this.tipscontent)===this.entityinput[i].start_offset){
+            id = this.entityinput[i].entity_template
+            standard = this.entityinput[i].standard
+          }
+        }
+        // return '实体名称：'+id+'  标准名称：'+standard
+        console.log(this.options);
+        
+        for (let i = 0; i < this.options.length; i++) {
+          for (let j = 0; j < this.options[i].children.length; j++) {
+            if (this.options[i].children[j].id===id) {
+              name = this.options[i].children[j].name
+              // console.log(id);
+              
+              if (standard) {
+                for (let k = 0; k < this.options[i].children[j].standard.length; k++) {
+                  if(this.options[i].children[j].standard[k].id===standard){
+                    stname = this.options[i].children[j].standard[k].standard_name
+                  }
+                }
+              }
+              return name
+            }
+          }
+        }
+      },
+      showtipscontent2(){
+        var standard = ''
+        var id = ''
+        var name = ''
+        var stname = ''
+        console.log(this.tipscontent,this.entityinput);
+        
+        for (let i = 0; i < this.entityinput.length; i++) {
+          if(Number(this.tipscontent)===this.entityinput[i].start_offset){
+            id = this.entityinput[i].entity_template
+            standard = this.entityinput[i].standard
+          }
+        }
+        // return '实体名称：'+id+'  标准名称：'+standard
+        console.log(this.options);
+        
+        for (let i = 0; i < this.options.length; i++) {
+          for (let j = 0; j < this.options[i].children.length; j++) {
+            if (this.options[i].children[j].id===id) {
+              name = this.options[i].children[j].name
+              // console.log(id);
+              
+              if (standard) {
+                for (let k = 0; k < this.options[i].children[j].standard.length; k++) {
+                  if(this.options[i].children[j].standard[k].id===standard){
+                    stname = this.options[i].children[j].standard[k].standard_name
+                  }
+                }
+              }
+              return stname
+            }
+          }
+        }
+      },
+      changebr(showdata){
+          return showdata.replace(/\n/g,"<br/>");
+      },
+      ischongfulabel(start,end){       
+        // console.log('aaaddddd',this.tableData[this.docid].content.length,start); 
+        if (start>=this.tableData[this.docid].content.length) {
+          return false
+        }
+        for (let i = 0; i < this.entityinput.length; i++) {
+          if((start>=this.entityinput[i].start_offset&&start<=this.entityinput[i].end_offset)&&(end>=this.entityinput[i].start_offset&&end<=this.entityinput[i].end_offset)){
+            return true
+          }
           if(!(end<=this.entityinput[i].start_offset||start>=this.entityinput[i].end_offset))
           {
             return false
@@ -891,9 +1324,9 @@ const carouselPrefix = '?imageView2/2/h/440'
           // console.log(this.projectid)
           // this.$store.commit('project/SET_PROJECTID', this.projectid)
           this.tableData = list
-          for (let i = 0; i < this.tableData.length; i++) {
-            this.tableData[i].content = this.tableData[i].content.replace(/\n/g,"<br>");
-          }
+          // for (let i = 0; i < this.tableData.length; i++) {
+          //   this.tableData[i].content = this.tableData[i].content.replace(/\n/g,"<br/>");
+          // }
           this.showdata = this.tableData[0].content
           console.log('n',this.tableData);
           
@@ -924,16 +1357,16 @@ const carouselPrefix = '?imageView2/2/h/440'
                   }
                   this.$store.dispatch('project/getstandard',getstandardid)
                   .then((response1) => {
-                    console.log('response1',response1);
+                    // console.log('response1',response1);
                     
-                    // list[i].children[j].standard = response1
-                    list[i].children[j].standard = []
-                    for (let m = 0; m < response1.length; m++) {
-                      if(response1[m].project === this.projectid){
-                        list[i].children[j].standard.push(response1[m])
-                        // console.log(12221);
-                      }
-                    }
+                    list[i].children[j].standard = response1
+                    // list[i].children[j].standard = []
+                    // for (let m = 0; m < response1.length; m++) {
+                    //   if(response1[m].project === this.projectid){
+                    //     list[i].children[j].standard.push(response1[m])
+                    //     // console.log(12221);
+                    //   }
+                    // }
                     })
                   .catch(() => {
                     console.log('error')
@@ -988,15 +1421,15 @@ const carouselPrefix = '?imageView2/2/h/440'
                   }
                    this.$store.dispatch('project/getstandard',getstandardid)
                   .then((response1) => {
-                    console.log('response1',response1);
+                    // console.log('response1',response1);
                     
-                    // list[i].children[j].standard = response1
-                    list[i].children[j].standard = []
-                    for (let k = 0; k < response1.length; k++) {
-                      if(response1[k].project === this.projectid){
-                        list[i].children[j].standard.push(response1[k])
-                      }
-                    }
+                    list[i].children[j].standard = response1
+                    // list[i].children[j].standard = []
+                    // for (let k = 0; k < response1.length; k++) {
+                    //   if(response1[k].project === this.projectid){
+                    //     list[i].children[j].standard.push(response1[k])
+                    //   }
+                    // }
                     })
                   .catch(() => {
                     console.log('error')
@@ -1005,8 +1438,9 @@ const carouselPrefix = '?imageView2/2/h/440'
                 if (i === list.length-1){
                   this.options = list
                   this.activeName2 = this.options[0].label
-                  this.updatedoc()
                   console.log('last', list);
+                  this.updatedoc()
+                  
                 }
               })
               .catch(() => {
@@ -1088,14 +1522,18 @@ const carouselPrefix = '?imageView2/2/h/440'
         console.log(data);
         if (JSON.stringify(this.labeledevent1) != "{}") {
           this.$store.dispatch('user/deleteevent',data).then((response) =>{
-            console.log('deleteevent',response)
+            // console.log('deleteevent',response)
+            this.deleteevent1 = false
             for (let i = 0; i < this.labeledeventoptions.length; i++) {
               if(this.labeledeventoptions[i].id===this.labeledevent1.id){
                 this.labeledeventoptions.splice(i,1)
                 this.showdata=this.tableData[this.docid].content
               }
             }
-            this.labeledevent1 = {}
+            this.labeledevent1 = {
+              name:'',
+              id:''
+            }
             
           })
         }
@@ -1160,22 +1598,24 @@ const carouselPrefix = '?imageView2/2/h/440'
       labeledeventchange(){
         console.log(this.labeledevent1);
         var eventname = this.labeledevent1.name.split(this.labeledevent1.id)
-        console.log(eventname);
-        
+        console.log('eventname',eventname);
+        this.itemlabel = eventname[0]
+        this.eventoptions=[]
         for (let i = 0; i < this.options.length; i++) {
           if (eventname[0]===this.options[i].name && this.eventoptions.length===0) {
             this.eventoptions.push(this.options[i])
           }
         }
-        console.log('xxxa',this.eventoptions,this.labeledeventoptions);
+        console.log('xxxda',this.eventoptions,'daad',this.labeledeventoptions);
         this.showdata=this.tableData[this.docid].content
         // this.updatedoc()
+
         for (let m = 0; m < this.labeledeventoptions.length; m++) {
           if(this.labeledeventoptions[m].id===this.labeledevent1.id){
             this.entityinput = this.labeledeventoptions[m].entities
             if(this.activeName!=''){
               console.log(123142143);
-              this.showlabeledstandard(this.itemlabel)
+              this.showlabeledstandard(this.itemlabel) 
             }
             var addcontent = []
             var addlist = []
@@ -1203,7 +1643,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 // for (let index = 0; index < str.length-1; index++) {
                 //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                 // }
-                addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
+                addcontent.push('<div class="labelstyle" name="' + this.labeledeventoptions[m].entities[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
 
                 // str_new += str[str.length-1]
                 // this.showdata = str_new;   
@@ -1219,18 +1659,25 @@ const carouselPrefix = '?imageView2/2/h/440'
                 str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset,addlist[i+1].start_offset)
               } else {
                 str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset)
-                this.showdata = str_new
+                console.log('tabact',this.tabactiveName);
+                
+                if (this.tabactiveName!='字典匹配'&&this.tabactiveName!='正则匹配') {
+                  this.showdata = str_new
+                }
               }
             }
-            }
+          }
         }
       },
-      deleteentity(content,deletestr) {
+      deleteentity(content) {
         var loop = this.entityinput.length
         this.selectstartentity = ''
         this.selectendentity = ''
+       
+        
         for (let i = 0; i < loop; i++) { //删去input内相应的项
-            if (content === this.entityinput[i].content) {
+         console.log('dddw',content,this.entityinput[i].content);
+            if (Number(content) === this.entityinput[i].start_offset) {
               const data = {
                 docid:this.tableData[this.docid].id,
                 entityid:this.entityinput[i].id
@@ -1240,15 +1687,15 @@ const carouselPrefix = '?imageView2/2/h/440'
               loop--
               this.$store.dispatch('user/deleteentity', data)
                 .then((response) => {
-                   var str =  this.showdata.split(deletestr);
-                    console.log('DELETE',deletestr,content,str);
-                    var new_str = ""
-                    for (let j = 0; j < str.length-1; j++) { // 将删除的词的样式去除后连接起来
-                      new_str+=str[j]+content
-                    }
-                    new_str +=str[str.length-1];
+                  //  var str =  this.showdata.split(deletestr);
+                  //   console.log('DELETE',deletestr,content,str);
+                  //   var new_str = ""
+                  //   for (let j = 0; j < str.length-1; j++) { // 将删除的词的样式去除后连接起来
+                  //     new_str+=str[j]+content
+                  //   }
+                  //   new_str +=str[str.length-1];
                   //  console.log(deletestr,str,new_str)
-                    this.showdata = new_str;
+                    // this.showdata = new_str;
                     this.showlabeledstandard(this.itemlabel)
                   // this.updatedoc()
                 })
@@ -1257,7 +1704,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           if (this.template_type==='RE') {
             this.reselectchange()
           }
-          
+          this.showlabeledevent()
           // for (let i = 0; i < this.entityinput1.length; i++) { //删去input内相应的项
           //   if (content === this.entityinput1[i].content) {
           //     const data = {
@@ -1276,6 +1723,10 @@ const carouselPrefix = '?imageView2/2/h/440'
         let length = this.tableData.length - 1
         if(this.docid+1<=length)
         {  
+          this.labeledevent1={
+            name:'',
+            id:''
+          }
           this.selectedregularid = ''
           this.selecteddicid=''
           this.selectendentity=''
@@ -1283,6 +1734,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           this.revalue1 = ''
           this.activeName=''
           this.docid++ 
+          this.tabactiveName = '实体统计'
           this.updatedoc()
           this.showdata = this.tableData[this.docid].content
         }
@@ -1292,6 +1744,10 @@ const carouselPrefix = '?imageView2/2/h/440'
 
         if(this.docid-1>=0)
         {
+          this.labeledevent1={
+            name:'',
+            id:''
+          }
           this.selectedregularid = ''
           this.selecteddicid=''
           this.selectendentity=''
@@ -1299,6 +1755,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           this.revalue1 = ''
           this.activeName=''
           this.docid-- 
+          this.tabactiveName = '实体统计'
           this.updatedoc()
           this.showdata = this.tableData[this.docid].content
         }
@@ -1306,6 +1763,10 @@ const carouselPrefix = '?imageView2/2/h/440'
       },
       aside_click(id){
         console.log(id)
+        this.labeledevent1={
+            name:'',
+            id:''
+          }
         this.selectedregularid=''
         this.selecteddicid=''
         this.selectendentity=''
@@ -1314,6 +1775,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         this.docid = id
         this.showdata = this.tableData[id].content
         this.activeName = ''
+        this.tabactiveName = '实体统计'
         this.updatedoc()
       },
       getlabeledeventoptions(){
@@ -1323,7 +1785,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           }
           this.$store.dispatch('user/getuserlabel', data)
             .then((response) => {
-              console.log('getlabelevent', response,this.options)
+              // console.log('getlabelevent', response,this.options)
               if (response.length < 1) {
                 this.labeledevent = ''
               } else {
@@ -1347,13 +1809,34 @@ const carouselPrefix = '?imageView2/2/h/440'
                   }
                 }
                 this.labeledeventoptions = response
+                console.log('labelaaaaa',this.labeledeventoptions,this.labeledevent1);
+                if (this.labeledeventoptions.length!=0&&this.labeledevent1.name==="") {
+                  this.labeledevent1 = {
+                    id:this.labeledeventoptions[0].id,
+                    name:this.labeledeventoptions[0].name
+                  }
+                }
                  for (let m = 0; m < this.labeledeventoptions.length; m++) {
                   if(this.labeledeventoptions[m].id===this.labeledevent1.id){
                     this.entityinput = this.labeledeventoptions[m].entities
+                    // console.log('huodeinput',this.entityinput);
+                    
                     // this.labeledeventchange()
                     this.showlabeledevent()
                   }
                 }
+                
+                var eventname = this.labeledevent1.name.split(this.labeledevent1.id)
+                if(this.itemlabel===''){
+                  console.log('fafafa',this.itemlabel);
+                  this.itemlabel = eventname[0]
+                }
+                for (let i = 0; i < this.options.length; i++) {
+                  if (eventname[0]===this.options[i].name && this.eventoptions.length===0) {
+                    this.eventoptions.push(this.options[i])
+                  }
+                }
+                this.showlabeledstandard(eventname[0])
                 // this.entityinput = this.labeledeventoptions.entities
                 console.log('xxxxxxa',this.labeledeventoptions);
               }
@@ -1361,14 +1844,6 @@ const carouselPrefix = '?imageView2/2/h/440'
       },
       showlabeledevent(){
         this.showdata=this.tableData[this.docid].content
-        // this.updatedoc()
-        // for (let m = 0; m < this.labeledeventoptions.length; m++) {
-          // if(this.labeledeventoptions[m].id===this.labeledevent1.id){
-          //   this.entityinput = this.labeledeventoptions[m].entities
-          //   if(this.activeName!=''){
-          //     console.log(123142143);
-          //     this.showlabeledstandard(this.itemlabel)
-          //   }
             var addcontent = []
             var addlist = []
             for (let i = 0; i < this.entityinput.length; i++) {
@@ -1381,6 +1856,7 @@ const carouselPrefix = '?imageView2/2/h/440'
               //   index=0
               // }
               var color =''
+              var color1 = ''
               if(index==1){
                 addlist.push(this.entityinput[i])
                 for (let k = 0; k < this.options.length; k++) {
@@ -1390,13 +1866,51 @@ const carouselPrefix = '?imageView2/2/h/440'
                     }
                   }
                 }
+                var whilenum = 0
+                if (i<this.entityinput.length-1) {
+                  var newcontent = ''
+                  var color1 = ''
+                  var n = i
+                  while(this.entityinput[i+1].start_offset<this.entityinput[n].end_offset){
+                    whilenum++
+                    var starttem = this.entityinput[i+1].start_offset - this.entityinput[n].start_offset
+                    var endtem = this.entityinput[i+1].end_offset - this.entityinput[n].start_offset
+                    if(n===i){
+                      newcontent+=content.slice(0,starttem)
+                    }
+                    for (let k = 0; k < this.options.length; k++) {
+                      for (let l = 0; l < this.options[k].children.length; l++) {
+                        if(this.options[k].children[l].id===this.entityinput[i+1].entity_template){
+                          color1 = this.options[k].children[l].color
+                        }
+                      }
+                    }
+                    newcontent+='<div class="labelstyle" name="' + this.entityinput[i+1].start_offset + '" style="background:' +color1+';color:' +this.isLight(color1) + '">'+content.slice(starttem,endtem)+'<div class="deletelabel">x</div></div>'
+                    if(i+1>=this.entityinput.length-1){
+                      newcontent+=content.slice(endtem,content.length-1)
+                      break
+                    }else{
+                      if(this.entityinput[i+1].start_offset<this.entityinput[n].end_offset){
+                        i++
+                      }else{
+                        newcontent+=content.slice(endtem,content.length-1)
+                        break
+                      }
+                    }
+                  }
+                  if(newcontent!=''){
+                    content = newcontent
+                    i = i-(whilenum-1)
+                  }
+                }
+               
                 // var str = this.showdata.split(content);
                 // var str_new = "";
                 // for (let index = 0; index < str.length-1; index++) {
                 //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                 // }
-                addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
-
+                addcontent.push('<div class="labelstyle" name="' + this.entityinput[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color) + '">'+content+'<div class="deletelabel">x</div></div>') 
+                i = i+whilenum
                 // str_new += str[str.length-1]
                 // this.showdata = str_new;   
               }         
@@ -1411,7 +1925,9 @@ const carouselPrefix = '?imageView2/2/h/440'
                 str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset,addlist[i+1].start_offset)
               } else {
                 str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset)
-                this.showdata = str_new
+                if (this.tabactiveName!='正则匹配'&&this.tabactiveName!='字典匹配') {
+                  this.showdata = str_new
+                }
               }
             }
             // }
@@ -1501,7 +2017,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   // for (let index = 0; index < str.length-1; index++) {
                   //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                   // }
-                  addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
+                  addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '"  style="background:' +color+';color:' +this.isLight(color) +'">'+content+'<div class="deletelabel">x</div></div>') 
                   // str_new += str[str.length-1]
                   // this.showdata = str_new;   
                 }         
@@ -1647,7 +2163,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   // for (let index = 0; index < str.length-1; index++) {
                   //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                   // }
-                  addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
+                  addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
                   // str_new += str[str.length-1]
                   // this.showdata = str_new;   
                 }         
@@ -1689,21 +2205,31 @@ const carouselPrefix = '?imageView2/2/h/440'
         var content = this.selecttext
         console.log('content', content);
 
-        var para = this.tableData[this.docid].content.split(this.selectpara)
-        const start_offset = para[0].length+this.selectstart
+        // var para = this.tableData[this.docid].content.split(this.selectpara)
+        // if(!para[0]){
+        //   para[0] = para[para.length-1]
+        // }
+        
+        const start_offset = this.selectpara.length+this.selectstart
         const end_offset = start_offset + content.length
-        var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+';color:' +this.isLight(this.selectvalue[1].color)+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
+        var addpara = this.selectpara.slice(0,this.selectstart)+' <el-tooltip content="提示文字" placement="top-start"><div class="labelstyle" style="background:' +this.selectvalue[1].color+';color:' +this.isLight(this.selectvalue[1].color)+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
+        // console.log('addpara',addpara);
+        console.log('addpara',addpara);
+        console.log('aaaaaa',this.showdata,'s',this.selectpara);
+        
         var str = this.showdata.split(this.selectpara);
+        console.log('str',str);
+        
         var str_new = "";
         str_new = str[0] + addpara + str[1]
-        this.showdata = str_new;
+        // this.showdata = str_new;
 
         // console.log('show',this.showdata);
         // console.log('doc',this.tableData[this.docid]);
         var docdata = this.tableData[this.docid].content
         // console.log('position',docdata.indexOf(content));
         // console.log('position1',content.length);
-        console.log('sl',para[0].length+this.selectstart);
+        // console.log('sl',para[0].length+this.selectstart);
         
         
         
@@ -1721,6 +2247,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         }
         this.$store.dispatch('user/labelentity', data)
           .then((response) => {
+            // this.showdata = str_new;
              if(this.template_type==='RE'){
               const data = {
                 docid:this.tableData[this.docid].id,
@@ -1732,6 +2259,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   const list = response.entities
                   this.entityinput = list
                   this.reselectchange()
+                  this.showlabeledevent()
                 })
               }else{
                 const data = {
@@ -1743,6 +2271,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                     console.log('updatedoc1',response)
                     const list = response
                     this.entityinput = list
+                    this.showlabeledevent()
                 })
             }
           })
@@ -1777,12 +2306,14 @@ const carouselPrefix = '?imageView2/2/h/440'
         //console.log(that.showdata);
         // for (let i = this.selectstart; i < this.selectend; i++) {
         console.log('showdata',this.showdata.split(this.selectpara));
-        var para = this.tableData[this.docid].content.split(this.selectpara)
-        const start_offset = para[0].length+this.selectstart
+        // var para = this.tableData[this.docid].content.split(this.selectpara)
+        // if(!para[0]){
+        //   para[0] = para[para.length-1]
+        // }
+        const start_offset = this.selectpara.length+this.selectstart
         const end_offset = start_offset + content.length
         var addpara = this.selectpara.slice(0,this.selectstart)+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+';color:' +this.isLight(this.selectvalue[1].color)+'">'+content+'<div class="deletelabel">x</div></div>'+this.selectpara.slice(this.selectend)
-        // console.log('add',addpara);
-
+        console.log('addpara',addpara);
         // }
         var str = this.showdata.split(this.selectpara);
         var str_new = "";
@@ -1790,13 +2321,14 @@ const carouselPrefix = '?imageView2/2/h/440'
         //   str_new += str[index]+'<div class="labelstyle" style="background:' +this.selectvalue[1].color+'">'+content+'<div class="deletelabel">x</div></div>';
         // }
         str_new = str[0] + addpara + str[1]
-        this.showdata = str_new;
+        // this.showdata = str_new;
         // console.log('show',this.showdata);
         console.log('doc',this.tableData[this.docid]);
         var docdata = this.tableData[this.docid].content
         // console.log('position',docdata.indexOf(content));
         // console.log('position1',content.length);
-        console.log('sl',para[0].length+this.selectstart);
+        // console.log('sl',para[0].length+this.selectstart);
+        console.log('beforechange',this.showdata);
         
         // const start_offset = para[0].length+this.selectstart
         // const end_offset = start_offset + content.length
@@ -1816,6 +2348,9 @@ const carouselPrefix = '?imageView2/2/h/440'
         }
         this.$store.dispatch('user/labelentity', data)
           .then((response) => {
+            // this.showdata = str_new;
+            // console.log('afterchange',this.showdata);
+
             // console.log(response);
             // data.list.id = response.id
             // // this.entityinput.push(data.list)
@@ -1979,6 +2514,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         for (let i = 0; i < children.length; i++) {
           if (children[i].id === id.entityid){
             this.standards = children[i].standard
+            this.standardid = ''
             break;
           }
           if(i===children.length-1){
@@ -2057,9 +2593,18 @@ const carouselPrefix = '?imageView2/2/h/440'
         })
         }
       },
-      addstandardoption(){
+      addstandardoption(item){
         this.dialogVisible=true
-        console.log(this.options,this.activeName);
+        this.deletestlist = []
+        console.log(item);
+        for (let i = 0; i < item.length; i++) {
+          for (let j = 0; j < item[i].standard.length; j++) {
+            item[i].standard[j].label = item[i].label
+            this.deletestlist.push(item[i].standard[j])
+          }
+        }
+        console.log('deletest',this.deletestlist);
+        
         for (let i = 0; i < this.options.length; i++) {
           if(this.activeName===this.options[i].label)
           {
@@ -2070,8 +2615,6 @@ const carouselPrefix = '?imageView2/2/h/440'
       dialogadd(){
         console.log('add2',this.dialogentity,this.dialoginput);
         if (this.dialogentity&&this.dialoginput) {
-          
-        
         const data = {
           id:this.projectid,
           list:{
@@ -2087,10 +2630,15 @@ const carouselPrefix = '?imageView2/2/h/440'
               this.$message({ message: '添加成功！', type: 'success' });
               if(this.template_type == 'EVENT') {
                   this.geteventEntitys()
-                  this.showlabeledstandard(this.itemlabel)
+                  setTimeout(() => {
+                    this.showlabeledstandard(this.itemlabel)  
+                  }, 500);
+                  
                 }else{
                   this.getEntitys()
-                  this.showlabeledstandard(this.itemlabel)
+                   setTimeout(() => {
+                    this.showlabeledstandard(this.itemlabel)  
+                  }, 500);
                 }
               
               this.dialogVisible = false
@@ -2102,13 +2650,40 @@ const carouselPrefix = '?imageView2/2/h/440'
         })
         }
       },
+      dialogdelete(){
+        if (this.deletestandardid) {
+           this.$store.dispatch('project/deletest', this.deletestandardid)
+            .then((response) => {
+              this.dialogVisible = false
+              this.deletestandardid = ''
+              this.deletestlist = []
+               if(this.template_type == 'EVENT') {
+                  this.geteventEntitys()
+                  this.showlabeledstandard(this.itemlabel)
+                }else{
+                  this.getEntitys()
+                  this.showlabeledstandard(this.itemlabel)
+                }
+               this.$message({
+                type: 'success',
+                message: '删除成功'
+              })
+            })
+         }else{
+          this.$message({
+          type: 'error',
+          message: '信息未填完整'
+        })
+        }
+      },
       showlabeledstandard(label){
         this.standards=[]
         this.standardentity=[]
-        this.itemlabel = label
+        // this.itemlabel = label
         // console.log(label,this.options);
         console.log('q',this.entityinput);
         if(this.template_type!='EVENT'){
+          this.itemlabel = label
           if(this.template_type==='RE'){
             const data = {
               docid:this.tableData[this.docid].id,
@@ -2133,34 +2708,42 @@ const carouselPrefix = '?imageView2/2/h/440'
               })
           }
         }else{
-          this.getlabeledeventoptions()
+          // this.getlabeledeventoptions()
         }
-        setTimeout(() => {
+        // setTimeout(() => {
           
-        console.log('h',this.entityinput,this.options);
-        this.labeledstandard=[]
-        for (let i = 0; i < this.options.length; i++) {
-          if (this.options[i].label===label) {
-            for (let j = 0; j < this.entityinput.length; j++) {
-              if(this.entityinput[j].standard != null){
-                for (let k = 0; k < this.options[i].children.length; k++) {
-                  if(this.options[i].children[k].id===this.entityinput[j].entity_template){
-                    for (let l = 0; l < this.options[i].children[k].standard.length; l++) {
-                      if (this.options[i].children[k].standard[l].id===this.entityinput[j].standard) {
-                        this.labeledstandard.push({
-                          standard_name:this.options[i].children[k].standard[l].standard_name,
-                          content:this.entityinput[j].content
-                        })
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-        console.log('labeledstandard',this.labeledstandard);
-        }, 1000);
+        // console.log('h',this.entityinput,this.options);
+        // this.labeledstandard.splice(0,this.labeledstandard.length)
+        // this.labeledstandard.push({
+        //   standard_name:'',
+        //   content:''
+        // })
+        // this.labeledstandard = []
+        // // this.$set(this.labeledstandard,[])
+        // // var temp = []
+        // for (let i = 0; i < this.options.length; i++) {
+        //   if (this.options[i].label===label) {
+        //     for (let j = 0; j < this.entityinput.length; j++) {
+        //       if(this.entityinput[j].standard != null){
+        //         for (let k = 0; k < this.options[i].children.length; k++) {
+        //           if(this.options[i].children[k].id===this.entityinput[j].entity_template){
+        //             for (let l = 0; l < this.options[i].children[k].standard.length; l++) {
+        //               if (this.options[i].children[k].standard[l].id===this.entityinput[j].standard) {
+        //                 this.labeledstandard.push({
+        //                   standard_name:this.options[i].children[k].standard[l].standard_name,
+        //                   content:this.entityinput[j].content
+        //                 })
+        //               }
+        //             }
+        //           }
+        //         }
+        //       }
+        //     }
+        //   }
+        // }
+        // // this.labeledstandard = temp
+        // console.log('labeledstandard',this.labeledstandard);
+        // }, 500);
         
       },
       getdic(){
@@ -2200,10 +2783,6 @@ const carouselPrefix = '?imageView2/2/h/440'
              
             for (let i = 0; i < loop; i++) {
               for (let j = 0; j < this.entityinput.length; j++) {
-                console.log('11',i);
-                
-                console.log('1',i,this.submitdicentity[i].end_offset);
-                console.log('2',j,this.entityinput[j].end_offset);
                 if (!(this.submitdicentity[i].end_offset<=this.entityinput[j].start_offset||this.submitdicentity[i].start_offset>=this.entityinput[j].end_offset)) {
                   this.chongfudic.push(this.submitdicentity[i])
                   this.submitdicentity.splice(i,1)
@@ -2213,8 +2792,33 @@ const carouselPrefix = '?imageView2/2/h/440'
                 }
               }
             }
+            console.log('1111s',this.showdicentity);
+            
             this.dicupdatedoc(this.showdicentity)
         })
+      },
+      deletedicmatch(name){
+        console.log('???//',name);
+        
+        for (let i = 0; i < this.showdicentity.length; i++) {
+          if (this.showdicentity[i].start_offset===Number(name)) {
+            this.showdicentity.splice(i,1)
+            break
+          }
+        }
+        for (let i = 0; i < this.chongfudic.length; i++) {
+           if (this.chongfudic[i].start_offset===Number(name)) {
+            this.chongfudic.splice(i,1)
+            break
+          }
+        }
+         for (let i = 0; i < this.submitdicentity.length; i++) {
+           if (this.submitdicentity[i].start_offset===Number(name)) {
+            this.submitdicentity.splice(i,1)
+            break
+          }
+        }
+        this.dicupdatedoc(this.showdicentity)
       },
       regularchange(){
         this.showdata = this.tableData[this.docid].content
@@ -2252,9 +2856,37 @@ const carouselPrefix = '?imageView2/2/h/440'
             this.regularupdatedoc(this.showregularentity)
         })
       },
+      deleteregmatch(name){
+         for (let i = 0; i < this.showregularentity.length; i++) {
+          if (this.showregularentity[i].start_offset===Number(name)) {
+            this.showregularentity.splice(i,1)
+            break
+          }
+        }
+        for (let i = 0; i < this.chongfuregular.length; i++) {
+           if (this.chongfuregular[i].start_offset===Number(name)) {
+            this.chongfuregular.splice(i,1)
+            break
+          }
+        }
+         for (let i = 0; i < this.submitregularentity.length; i++) {
+           if (this.submitregularentity[i].start_offset===Number(name)) {
+            this.submitregularentity.splice(i,1)
+            break
+          }
+        }
+        this.regularupdatedoc(this.showregularentity)
+      },
       dicupdatedoc(response){
         this.showdata=this.tableData[this.docid].content
+        // console.log(this.tableData[this.docid].content);
+        
+        // this.tableData[this.docid].content = this.tableData[this.docid].content.replace(/<br\s*\/>/gi, "\n");  
+        // console.log(this.tableData[this.docid].content);
+        
         const list = response
+        console.log('dddd',list);
+        
         this.dicentity = response
         // this.entityinput = list
         var addcontent = []
@@ -2279,13 +2911,16 @@ const carouselPrefix = '?imageView2/2/h/440'
             // for (let index = 0; index < str.length-1; index++) {
             //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
             // }
-            addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'</div>') 
+            addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
             // str_new += str[str.length-1]
             // this.showdata = str_new;   
           }         
         }
+        console.log('addlist',addlist);
+        
         var str_new = "";
         for (let i = 0; i < addcontent.length; i++) {
+          console.log('addcontent',addcontent,str_new);
           var start = 0
           if (i>0) {
             start = list[i].start_offset
@@ -2295,6 +2930,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           } else {
             str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset)
             this.showdata = str_new
+            this.showdata = this.showdata.replace(/\n/g,"<br/>");          
           }
         }
       },
@@ -2320,14 +2956,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 }
               }
             }
-            // var str = this.showdata.split(content);
-            // var str_new = "";
-            // for (let index = 0; index < str.length-1; index++) {
-            //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
-            // }
-            addcontent.push('<div class="labelstyle" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'</div>') 
-            // str_new += str[str.length-1]
-            // this.showdata = str_new;   
+            addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
           }         
         }
         var str_new = "";
@@ -2349,10 +2978,12 @@ const carouselPrefix = '?imageView2/2/h/440'
         this.activeName=''
         if(name==='字典匹配'){
           this.selecteddicid=''
+          this.dicinputstname = ''
           this.submitdicentity = []
              this.showdicentity = []
              this.chongfudic = []
           this.showdata = this.showdata = this.tableData[this.docid].content
+          this.getdic()
         }else if(name==='正则匹配'){
           this.selectedregularid=''
           this.submitregularentity = []
@@ -2423,11 +3054,10 @@ const carouselPrefix = '?imageView2/2/h/440'
         }
       },
       dicadd(){
-        if (this.dicinputname&&this.dicinputentity&&this.dicinputstname) {
-          
-        
+        if (this.dicinputname&&this.dicinputentity) {
         const formData = new window.FormData()
         const input = [this.dicinputname,this.dicinputentity,this.dicinputstname]
+        console.log(input);
         formData.append('type','manual')
         formData.append('data',input)
          const data = {
@@ -2441,6 +3071,34 @@ const carouselPrefix = '?imageView2/2/h/440'
         })
         }
         else{
+          this.$message({
+          type: 'error',
+          message: '信息未填完整'
+        })
+        }
+      },
+      dicdelete(){
+         if (this.deletedicid) {
+           const data = {
+             projectid:this.projectid,
+             entityid:this.deletedicid
+           }
+           this.$store.dispatch('project/deletedic', data)
+            .then((response) => {
+              this.showadddic = false
+              this.deletedicid = ''
+              this.selecteddicid = ''
+              this.showdicentity = ''
+              this.submitdicentity = ''
+              this.chongfudic = ''
+              this.showdata = this.tableData[this.docid].content
+              this.getdic()
+               this.$message({
+                type: 'success',
+                message: '删除成功'
+              })
+            })
+         }else{
           this.$message({
           type: 'error',
           message: '信息未填完整'
@@ -2482,6 +3140,30 @@ const carouselPrefix = '?imageView2/2/h/440'
           this.$message({
           type: 'error',
           message: '未输入表达式或对应实体'
+        })
+        }
+      },
+      regulardelete(){
+        if (this.deleteregularid) {
+           this.$store.dispatch('project/deleteregular', this.deleteregularid)
+            .then((response) => {
+              this.showaddregular = false
+              this.deleteregularid = ''
+              this.selectedregularid = ''
+              this.submitregularentity = ''
+              this.chongfuregular = ''
+              this.showregularentity = ''
+              this.showdata = this.tableData[this.docid].content
+              this.getregular()
+               this.$message({
+                type: 'success',
+                message: '删除成功'
+              })
+            })
+         }else{
+          this.$message({
+          type: 'error',
+          message: '信息未填完整'
         })
         }
       },
@@ -2576,6 +3258,16 @@ const carouselPrefix = '?imageView2/2/h/440'
     },
     data() {
       return {
+        deleteevent1:false,
+        tipscontent:'',
+        tipsshow:false,
+        deletestlist:[],
+        deletestandardid:'',
+        standardguanli:'',
+        deleteregularid:'',
+        regularguanli:'',
+        deletedicid:'',
+        dicguanli:'',
         deleteArr:[],
         showregularentity:[],
         showdicentity:[],
@@ -2630,7 +3322,10 @@ const carouselPrefix = '?imageView2/2/h/440'
         selectvalue:"",
         labeledclass:'',
         labeledevent:'',
-        labeledevent1:{},
+        labeledevent1:{
+          name:'',
+          id:''
+        },
         labeledeventoptions:[],
         revalue1:'',
         startentitys:[],
@@ -2824,6 +3519,10 @@ html{
     line-height: 175%;
     font-size:20px;
     z-index: 1;
+    word-break: break-all;
+    overflow: hidden;
+    padding-bottom: 10px;
+    white-space: pre-wrap;
 }
 .labelstyle{
   background: #F38181;
@@ -2833,6 +3532,10 @@ html{
   margin-left:3px;
   margin-right:3px;
   padding:3px;
+  white-space: pre-wrap;
+}
+.labelstyle1{
+  white-space: normal;
 }
 .deletelabel{
   margin-left: 5px;
@@ -2856,7 +3559,7 @@ div.block .el-input{
 }
 .aside-container{
   min-height: 90%;
-  min-width: 300px;
+  // min-width: 300px;
   height: auto;
   overflow: hidden;
   background: #f0f0f0;
@@ -2900,5 +3603,28 @@ div.block .el-input{
   text-align: center;
   -webkit-border-radius: 2.75em;
   border-radius: 2.75em;
+}
+.hoveritem{
+  visibility: hidden;
+  position:absolute;
+  // display: none;
+}
+.asidecontent{
+  box-shadow: 5px;
+}
+.standardcard{
+  position: absolute;
+  top:420px;
+  margin-left:10px;
+  min-width: 320px;
+  min-height: 300px;
+  max-width: 320px;
+}
+.standardcontainer{
+  display: inline-block;
+  box-shadow: 0px 0px 3px #888888;
+    margin: 5px;
+    padding: 8px;
+    border-radius: 5px;
 }
 </style>
