@@ -498,22 +498,58 @@
               circle
               @click="addlabeledevent()"
             />
+            已创建的事件组：
+            <el-select
+              v-model="labeledevent1"
+              placeholder="选择已创建的事件组"
+              value-key="name"
+              @change="labeledeventchange"
+            >
+              <el-option
+                v-for="item in labeledeventoptions"
+                :key="item.name"
+                :label="item.name"
+                :value="{name:item.name,id:item.id}"
+              />
+            </el-select>
+            <el-button type="danger" icon="el-icon-delete" circle @click="deleteevent" />
             <div style="margin:10px">
-              已创建的事件组：
-              <el-select
-                v-model="labeledevent1"
-                placeholder="选择已创建的事件组"
-                value-key="name"
-                @change="labeledeventchange"
-              >
-                <el-option
-                  v-for="item in labeledeventoptions"
-                  :key="item.name"
-                  :label="item.name"
-                  :value="{name:item.name,id:item.id}"
-                />
-              </el-select>
-              <el-button type="danger" icon="el-icon-delete" circle @click="deleteevent" />
+              <template>
+                <el-table
+                  :data="labeledeventoptions"
+                  height="300"
+                  style="width: 100%"
+                >
+                  <el-table-column
+                    label="事件ID"
+                    width="180"
+                  >
+                    <template slot-scope="scope">
+                      <i class="el-icon-time" />
+                      <span style="margin-left: 10px">{{ scope.row.id }}</span>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    label="已创建事件组名"
+                    width="180"
+                  >
+                    <template slot-scope="scope">
+                      <div slot="reference" class="name-wrapper">
+                        <el-tag size="medium">{{ scope.row.name }}</el-tag>
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column label="操作">
+                    <template slot-scope="scope">
+                      <el-button
+                        size="mini"
+                        type="primary"
+                        @click="showTheEvent(scope.$index, scope.row)"
+                      >查看标注</el-button>
+                    </template>
+                  </el-table-column>
+                </el-table>
+              </template>
             </div>
             <!-- <div v-if="labeledevent!=''">
               事件组：<div
@@ -663,6 +699,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           }
         }
         console.log('filter',filterArr,this.entityinput,this.itemlabel);
+        console.log(this.itemlabel)
         
 				return filterArr;
       },
@@ -1089,9 +1126,11 @@ const carouselPrefix = '?imageView2/2/h/440'
         if (JSON.stringify(this.labeledevent1) != "{}") {
           this.$store.dispatch('user/deleteevent',data).then((response) =>{
             console.log('deleteevent',response)
+            console.log('labeledeventoptions', this.labeledeventoptions)
             for (let i = 0; i < this.labeledeventoptions.length; i++) {
               if(this.labeledeventoptions[i].id===this.labeledevent1.id){
                 this.labeledeventoptions.splice(i,1)
+                console.log(this.labeledeventoptions)
                 this.showdata=this.tableData[this.docid].content
               }
             }
@@ -1135,6 +1174,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             event_group_template:this.labeledevent.id
           }
         }
+        console.log('add labeled event', data)
         this.$store.dispatch('user/labelevent',data).then((response) =>{
           console.log('labelevent',response)
           this.labeledevent.eventid = response.id
@@ -2573,6 +2613,30 @@ const carouselPrefix = '?imageView2/2/h/440'
       removeregulartem(index) {
       this.regulartem.splice(index, 1)
       },
+      deleteTheEvent(index, row) {
+        this.labeledevent1 = {
+          name:row.name,
+          id:row.id
+        }
+        console.log('labeledevent1', this.labeledevent1);
+        this.deleteevent();
+      },
+      showTheEvent(index, row) {
+        console.log(index, row);
+        this.entityinput = row.entities;
+        this.event_group_template = row.event_group_template;//对应的事件组类型
+        console.log('event_group_template', this.event_group_template)
+        console.log('entityinput', this.entityinput);
+        this.labeledevent.id = row.event_group_template
+        this.labeledevent.eventid = row.id
+        this.showlabeledevent()
+        
+        // this.labeledevent1 = {
+        //   name:row.name,
+        //   id:row.id
+        // }
+        console.log('labeledevent1', this.labeledevent1);
+      }
     },
     data() {
       return {
