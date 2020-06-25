@@ -1218,8 +1218,9 @@ const carouselPrefix = '?imageView2/2/h/440'
             var deletestr =that.escape2Html($(this).parent()[0].outerHTML);
             var content = $(this).parent()[0].innerText;
             content = content.split('\nx');
-            console.log('content',$(this).parent()[0].attributes.name.value);
-            that.deleteentity($(this).parent()[0].attributes.name.value)
+            console.log('attributes', $(this).parent()[0].attributes)
+            console.log('content',$(this).parent()[0].attributes.name.value, $(this).parent()[0].attributes.endflag.value);
+            that.deleteentity($(this).parent()[0].attributes.name.value, $(this).parent()[0].attributes.endflag.value)
             console.log('afterdeleteinput',that.entityinput);
           }
         })
@@ -1645,7 +1646,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             this.eventoptions.push(this.options[i])
           }
         }
-        console.log('xxxda',this.eventoptions,'daad',this.labeledeventoptions);
+        console.log('eventoptions',this.eventoptions,'labeledeventoptions',this.labeledeventoptions);
         this.showdata=this.tableData[this.docid].content
         // this.updatedoc()
 
@@ -1682,7 +1683,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 // for (let index = 0; index < str.length-1; index++) {
                 //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                 // }
-                addcontent.push('<div class="labelstyle" name="' + this.labeledeventoptions[m].entities[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
+                addcontent.push('<div class="labelstyle" name="' + this.labeledeventoptions[m].entities[i].start_offset + '" endflag="' + this.labeledeventoptions[m].entities[i].end_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
 
                 // str_new += str[str.length-1]
                 // this.showdata = str_new;   
@@ -1708,15 +1709,14 @@ const carouselPrefix = '?imageView2/2/h/440'
           }
         }
       },
-      deleteentity(content) {
+      deleteentity(content_start, content_end) {
         var loop = this.entityinput.length
         this.selectstartentity = ''
         this.selectendentity = ''
        
-        
         for (let i = 0; i < loop; i++) { //删去input内相应的项
-         console.log('dddw',content,this.entityinput[i].content);
-            if (Number(content) === this.entityinput[i].start_offset) {
+         console.log('content_start_end', content_start, content_end, this.entityinput[i]);
+            if (Number(content_start) === this.entityinput[i].start_offset && Number(content_end) === this.entityinput[i].end_offset) {
               const data = {
                 docid:this.tableData[this.docid].id,
                 entityid:this.entityinput[i].id
@@ -1927,15 +1927,15 @@ const carouselPrefix = '?imageView2/2/h/440'
                         }
                       }
                     }
-                    newcontent+='<div class="labelstyle" name="' + this.entityinput[i+1].start_offset + '" style="background:' +color1+';color:' +this.isLight(color1) + '">'+content.slice(starttem,endtem)+'<div class="deletelabel">x</div></div>'
+                    newcontent+='<div class="labelstyle" name="' + this.entityinput[i+1].start_offset + '" endflag="' + this.entityinput[i+1].end_offset + '" style="background:' +color1+';color:' +this.isLight(color1) + '">'+content.slice(starttem,endtem)+'<div class="deletelabel">x</div></div>'
                     if(i+1>=this.entityinput.length-1){
-                      newcontent+=content.slice(endtem,content.length-1)
+                      newcontent+=content.slice(endtem,content.length)
                       break
                     }else{
                       if(this.entityinput[i+1].start_offset<this.entityinput[n].end_offset){
                         i++
                       }else{
-                        newcontent+=content.slice(endtem,content.length-1)
+                        newcontent+=content.slice(endtem,content.length)
                         break
                       }
                     }
@@ -1951,7 +1951,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 // for (let index = 0; index < str.length-1; index++) {
                 //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                 // }
-                addcontent.push('<div class="labelstyle" name="' + this.entityinput[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color) + '">'+content+'<div class="deletelabel">x</div></div>') 
+                addcontent.push('<div class="labelstyle" name="' + this.entityinput[i].start_offset + '" endflag="' + this.entityinput[i].end_offset + '" style="background:' +color+';color:' +this.isLight(color) + '">'+content+'<div class="deletelabel">x</div></div>') 
                 i = i+whilenum
                 // str_new += str[str.length-1]
                 // this.showdata = str_new;   
@@ -2059,7 +2059,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   // for (let index = 0; index < str.length-1; index++) {
                   //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                   // }
-                  addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '"  style="background:' +color+';color:' +this.isLight(color) +'">'+content+'<div class="deletelabel">x</div></div>') 
+                  addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '"  endflag="' + list[i].end_offset + '" style="background:' +color+';color:' +this.isLight(color) +'">'+content+'<div class="deletelabel">x</div></div>') 
                   // str_new += str[str.length-1]
                   // this.showdata = str_new;   
                 }         
@@ -2205,7 +2205,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   // for (let index = 0; index < str.length-1; index++) {
                   //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
                   // }
-                  addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
+                  addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" endflag="' + list[i].end_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
                   // str_new += str[str.length-1]
                   // this.showdata = str_new;   
                 }         
@@ -2953,7 +2953,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             // for (let index = 0; index < str.length-1; index++) {
             //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
             // }
-            addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
+            addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" endflag="' + list[i].end_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
             // str_new += str[str.length-1]
             // this.showdata = str_new;   
           }         
@@ -2998,7 +2998,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 }
               }
             }
-            addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
+            addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" endflag="' + list[i].end_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>') 
           }         
         }
         var str_new = "";
@@ -3298,12 +3298,12 @@ const carouselPrefix = '?imageView2/2/h/440'
       this.regulartem.splice(index, 1)
       },
       deleteTheEvent(index, row) {
-        this.labeledevent1 = {
-          name:row.name,
-          id:row.id
-        }
-        console.log('labeledevent1', this.labeledevent1);
-        this.deleteevent();
+        // this.labeledevent1 = {
+        //   name:row.name,
+        //   id:row.id
+        // }
+        // console.log('labeledevent1', this.labeledevent1);
+        // this.deleteevent();
       },
       showTheEvent(index, row) {
         console.log(index, row);
@@ -3311,15 +3311,13 @@ const carouselPrefix = '?imageView2/2/h/440'
         this.event_group_template = row.event_group_template;//对应的事件组类型
         console.log('event_group_template', this.event_group_template)
         console.log('entityinput', this.entityinput);
-        this.labeledevent.id = row.event_group_template
-        this.labeledevent.eventid = row.id
         this.showlabeledevent()
-        
-        // this.labeledevent1 = {
-        //   name:row.name,
-        //   id:row.id
-        // }
-        console.log('labeledevent1', this.labeledevent1);
+        this.labeledevent1 = {
+          name:row.name,
+          id:row.id
+        }
+        console.log('labeledevent1', this.labeledevent1)
+        this.labeledeventchange()
       }
     },
     data() {
