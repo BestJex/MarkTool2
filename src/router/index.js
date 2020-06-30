@@ -23,7 +23,7 @@ import Layout from '@/layout'
  * redirect: noRedirect           if set noRedirect will no redirect in the breadcrumb
  * name:'router-name'             the name is used by <keep-alive> (must set!!!)
  * meta : {
-    roles: ['admin','editor']    control the page roles (you can set multiple roles)
+    roles: ['admin','reviewer']    control the page roles (you can set multiple roles)
     title: 'title'               the name show in sidebar and breadcrumb (recommend set)
     icon: 'svg-name'             the icon show in the sidebar
     noCache: true                if set true, the page will no be cached(default is false)
@@ -282,8 +282,8 @@ export const asyncRoutes = [
         path: 'index',
         component: () => import('@/views/review/index'),
         name: '审核任务',
-        meta: { title: '审核任务', icon: 'skill'
-        //  roles: ['admin', 'editor']
+        meta: { title: '审核任务', icon: 'skill',
+          roles: ['admin', 'reviewer']
         }
       },
       {
@@ -291,8 +291,8 @@ export const asyncRoutes = [
         component: () => import('@/views/review/reviewing'),
         name: '审核任务',
         hidden: true,
-        meta: { title: '审核任务'
-        //  roles: ['admin', 'editor']
+        meta: { title: '审核任务',
+          roles: ['admin', 'reviewer']
         }
       }
     ]
@@ -308,7 +308,7 @@ export const asyncRoutes = [
     meta: {
       title: 'Permission',
       icon: 'lock'
-      // roles: ['admin', 'editor'] // you can set roles in root nav
+      // roles: ['admin', 'reviewer'] // you can set roles in root nav
     },
     children: [
       {

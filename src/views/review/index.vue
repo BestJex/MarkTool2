@@ -150,7 +150,7 @@ export default {
       })
     },
     mark(index, row) { // need jump to with mission ID
-      // console.log(row)
+      console.log('review row', row)
       // console.log(this.$store.getters.userid)
       // var list = this.$store.dispatch('user/getEpoch')
       // console.log(list)
