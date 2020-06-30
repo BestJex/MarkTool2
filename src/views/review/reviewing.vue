@@ -2401,7 +2401,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             entity_template:this.selectvalue[1].id,
             event_group_annotation:this.labeledevent1.id,
             user:this.userid,
-            role:2
+            role:3
           }
         }
         this.$store.dispatch('user/labelentity', data)
@@ -2465,7 +2465,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           list:{
             doc:this.tableData[this.docid].id,
             user:this.userid,
-            role:2,
+            role:3,
             relation_entity_template:this.selectstartentity.value.relation,
             start_entity:this.selectstartentity.value.startid,
             end_entity:this.selectendentity.value.endid
@@ -2547,7 +2547,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             id:this.tableData[this.docid].id,
             list:{
               user:this.userid,
-              role:2
+              role:3
             }
           }
           this.$store.dispatch('user/labelconfirm', data)
@@ -3060,7 +3060,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           // console.log(this.dicentity);
           for (let i = 0; i < this.submitdicentity.length; i++) {
             this.submitdicentity[i].user = this.userid
-            this.submitdicentity[i].role = 2
+            this.submitdicentity[i].role = 3
              if(this.template_type=='EVENT'){
               this.submitdicentity[i].event_group_annotation=this.labeledevent1.id
             }
@@ -3089,7 +3089,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           console.log(this.submitregularentity);
           for (let i = 0; i < this.submitregularentity.length; i++) {
             this.submitregularentity[i].user = this.userid
-            this.submitregularentity[i].role = 2
+            this.submitregularentity[i].role = 3
             if(this.template_type=='EVENT'){
               this.submitregularentity[i].event_group_annotation=this.labeledevent1.id
             }
