@@ -612,12 +612,24 @@
                     </template>
                   </el-table-column>
                   <el-table-column
-                    label="已创建事件组名"
+                    label="事件组名"
                     width="180"
                   >
                     <template slot-scope="scope">
                       <div slot="reference" class="name-wrapper">
                         <el-tag size="medium">{{ scope.row.name }}</el-tag>
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    label="事件中已标注实体"
+                    width="360"
+                  >
+                    <template slot-scope="scope">
+                      <div slot="reference" class="name-wrapper">
+                        <li v-for="entity in scope.row.entities" :key="entity">
+                          {{ entity.content }} [ {{ entity_id_name_list[entity.entity_template] }} ]
+                        </li>
                       </div>
                     </template>
                   </el-table-column>
@@ -1453,6 +1465,8 @@ const carouselPrefix = '?imageView2/2/h/440'
                     id:list[i].children[j].id
                   }
                   list[i].children[j].label =  list[i].children[j].name
+                  console.log('entity_template_id_name', list[i].children[j].id, list[i].children[j].name)
+                  this.entity_id_name_list[list[i].children[j].id] = list[i].children[j].name
                   const getstandardid = {
                     projectid:this.projectid,
                     entityid:list[i].children[j].id
@@ -1485,6 +1499,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 console.log('error')
               })
           }
+          console.log('entity_id_name_list', this.entity_id_name_list)
         })
       },
       getclass() {
@@ -1657,6 +1672,7 @@ const carouselPrefix = '?imageView2/2/h/440'
               console.log(123142143);
               this.showlabeledstandard(this.itemlabel) 
             }
+            //标注实体显示
             var addcontent = []
             var addlist = []
             for (let i = 0; i < this.labeledeventoptions[m].entities.length; i++) {
@@ -1678,6 +1694,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                     }
                   }
                 }
+                //此处需要添加showlabeledevent()中的嵌套标注显示效果
                 // var str = this.showdata.split(content);
                 // var str_new = "";
                 // for (let index = 0; index < str.length-1; index++) {
@@ -1882,6 +1899,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             })
       },
       showlabeledevent(){
+        //嵌套标注正常显示方法
         this.showdata=this.tableData[this.docid].content
             var addcontent = []
             var addlist = []
@@ -1904,6 +1922,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                     }
                   }
                 }
+                //实现正常嵌套标注显示效果
                 var whilenum = 0
                 var color1 = ''
                 if (i<this.entityinput.length-1) {
@@ -3317,11 +3336,13 @@ const carouselPrefix = '?imageView2/2/h/440'
           id:row.id
         }
         console.log('labeledevent1', this.labeledevent1)
-        this.labeledeventchange()
+        //this.labeledeventchange()
       }
     },
     data() {
       return {
+        entity_id_name_list:[],
+        entity_template_name_list:[],
         deleteevent1:false,
         tipscontent:'',
         tipsshow:false,

@@ -612,12 +612,24 @@
                     </template>
                   </el-table-column>
                   <el-table-column
-                    label="已创建事件组名"
+                    label="事件组名"
                     width="180"
                   >
                     <template slot-scope="scope">
                       <div slot="reference" class="name-wrapper">
                         <el-tag size="medium">{{ scope.row.name }}</el-tag>
+                      </div>
+                    </template>
+                  </el-table-column>
+                  <el-table-column
+                    label="事件中已标注实体"
+                    width="360"
+                  >
+                    <template slot-scope="scope">
+                      <div slot="reference" class="name-wrapper">
+                        <li v-for="entity in scope.row.entities" :key="entity">
+                          {{ entity.content }} [ {{ entity_id_name_list[entity.entity_template] }} ]
+                        </li>
                       </div>
                     </template>
                   </el-table-column>
@@ -1454,6 +1466,8 @@ const carouselPrefix = '?imageView2/2/h/440'
                     id:list[i].children[j].id
                   }
                   list[i].children[j].label =  list[i].children[j].name
+                  console.log('entity_template_id_name', list[i].children[j].id, list[i].children[j].name)
+                  this.entity_id_name_list[list[i].children[j].id] = list[i].children[j].name
                   const getstandardid = {
                     projectid:this.projectid,
                     entityid:list[i].children[j].id
@@ -1486,6 +1500,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 console.log('error')
               })
           }
+          console.log('entity_id_name_list', this.entity_id_name_list)
         })
       },
       getclass() {
@@ -1823,7 +1838,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             docid:this.tableData[this.docid].id,
             userid:this.userid
           }
-          this.$store.dispatch('user/getuserlabel', data)
+          this.$store.dispatch('reviewer/getrelabel', data)
             .then((response) => {
               // console.log('getlabelevent', response,this.options)
               if (response.length < 1) {
@@ -2028,7 +2043,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             docid:this.tableData[this.docid].id,
             userid:this.userid
           }
-          this.$store.dispatch('user/getuserlabel', data)
+          this.$store.dispatch('reviewer/getrelabel', data)
             .then((response) => {
               console.log('updatedoc',response)
               const list = response
@@ -2084,7 +2099,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             docid:this.tableData[this.docid].id,
             userid:this.userid
           }
-          this.$store.dispatch('user/getuserlabel', data)
+          this.$store.dispatch('reviewer/getrelabel', data)
             .then((response) => {
               console.log('getlabelclass', response,this.options)
               if (response.length < 1) {
@@ -2175,7 +2190,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           //   this.showlabeledstandard()
           // }
           // this.activeName=''
-          this.$store.dispatch('user/getuserlabel', data)
+          this.$store.dispatch('reviewer/getrelabel', data)
             .then((response) => {
               console.log('updatedoc',response)
               const list = response.entities
@@ -2296,7 +2311,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                 docid:this.tableData[this.docid].id,
                 userid:this.userid
               }
-              this.$store.dispatch('user/getuserlabel', data)
+              this.$store.dispatch('reviewer/getrelabel', data)
                 .then((response) => {
                   console.log('updatedoc1',response)
                   const list = response.entities
@@ -2309,7 +2324,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   docid:this.tableData[this.docid].id,
                   userid:this.userid
                 }
-                this.$store.dispatch('user/getuserlabel', data)
+                this.$store.dispatch('reviewer/getrelabel', data)
                   .then((response) => {
                     console.log('updatedoc1',response)
                     const list = response
@@ -2590,7 +2605,7 @@ const carouselPrefix = '?imageView2/2/h/440'
                   docid:this.tableData[this.docid].id,
                   userid:this.userid
                 }
-                this.$store.dispatch('user/getuserlabel', data)
+                this.$store.dispatch('reviewer/getrelabel', data)
                   .then((response) => {
                     console.log('getlabelevent', response,this.options)
                     if (response.length < 1) {
@@ -2732,7 +2747,7 @@ const carouselPrefix = '?imageView2/2/h/440'
               docid:this.tableData[this.docid].id,
               userid:this.userid
             }
-            this.$store.dispatch('user/getuserlabel', data)
+            this.$store.dispatch('reviewer/getrelabel', data)
               .then((response) => {
                 console.log('updatedoc1',response)
                 const list = response.entities
@@ -2743,7 +2758,7 @@ const carouselPrefix = '?imageView2/2/h/440'
               docid:this.tableData[this.docid].id,
               userid:this.userid
             }
-            this.$store.dispatch('user/getuserlabel', data)
+            this.$store.dispatch('reviewer/getrelabel', data)
               .then((response) => {
                 console.log('updatedoc3',response)
                 const list = response
@@ -3318,11 +3333,12 @@ const carouselPrefix = '?imageView2/2/h/440'
           id:row.id
         }
         console.log('labeledevent1', this.labeledevent1)
-        this.labeledeventchange()
+        //this.labeledeventchange()
       }
     },
     data() {
       return {
+        entity_id_name_list:[],
         deleteevent1:false,
         tipscontent:'',
         tipsshow:false,
