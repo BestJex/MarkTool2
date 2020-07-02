@@ -628,7 +628,7 @@
                     <template slot-scope="scope">
                       <div slot="reference" class="name-wrapper">
                         <li v-for="entity in scope.row.entities" :key="entity">
-                          {{ entity.content }} [ {{ entity_id_name_list[entity.entity_template] }} ]
+                          {{ entity.content }} [ {{ entity_id_name_list[entity.entity_template][0] }} ]
                         </li>
                       </div>
                     </template>
@@ -1227,12 +1227,14 @@ const carouselPrefix = '?imageView2/2/h/440'
           else
           {
             that.tipsshow = false
-            var deletestr =that.escape2Html($(this).parent()[0].outerHTML);
+            var deletestr = that.escape2Html($(this).parent()[0].outerHTML);
             var content = $(this).parent()[0].innerText;
             content = content.split('\nx');
             console.log('attributes', $(this).parent()[0].attributes)
-            console.log('content',$(this).parent()[0].attributes.name.value, $(this).parent()[0].attributes.endflag.value);
-            that.deleteentity($(this).parent()[0].attributes.name.value, $(this).parent()[0].attributes.endflag.value)
+            var style_str = $(this).parent()[0].attributes.style.value
+            var color_str = style_str.substring(style_str.length-21, style_str.length-14) //截取style字符串中的实体颜色值
+            console.log('content',$(this).parent()[0].attributes.name.value, $(this).parent()[0].attributes.endflag.value, color_str);
+            that.deleteentity($(this).parent()[0].attributes.name.value, $(this).parent()[0].attributes.endflag.value, color_str)
             console.log('afterdeleteinput',that.entityinput);
           }
         })
@@ -1465,8 +1467,8 @@ const carouselPrefix = '?imageView2/2/h/440'
                     id:list[i].children[j].id
                   }
                   list[i].children[j].label =  list[i].children[j].name
-                  console.log('entity_template_id_name', list[i].children[j].id, list[i].children[j].name)
-                  this.entity_id_name_list[list[i].children[j].id] = list[i].children[j].name
+                  console.log('entity_template_id_name', list[i].children[j].id, list[i].children[j].name, list[i].children[j].color)
+                  this.entity_id_name_list[list[i].children[j].id] = [list[i].children[j].name, list[i].children[j].color]
                   const getstandardid = {
                     projectid:this.projectid,
                     entityid:list[i].children[j].id
@@ -1726,14 +1728,15 @@ const carouselPrefix = '?imageView2/2/h/440'
           }
         }
       },
-      deleteentity(content_start, content_end) {
+      deleteentity(content_start, content_end, content_color) {
         var loop = this.entityinput.length
         this.selectstartentity = ''
         this.selectendentity = ''
        
         for (let i = 0; i < loop; i++) { //删去input内相应的项
-         console.log('content_start_end', content_start, content_end, this.entityinput[i]);
-            if (Number(content_start) === this.entityinput[i].start_offset && Number(content_end) === this.entityinput[i].end_offset) {
+         console.log('content_start_end', content_start, content_end, content_color, this.entityinput[i])
+         console.log('delete_entity_color', this.entity_id_name_list[this.entityinput[i].entity_template][1])
+            if (Number(content_start) === this.entityinput[i].start_offset && Number(content_end) === this.entityinput[i].end_offset && content_color === this.entity_id_name_list[this.entityinput[i].entity_template][1]) {
               const data = {
                 docid:this.tableData[this.docid].id,
                 entityid:this.entityinput[i].id
@@ -3330,13 +3333,13 @@ const carouselPrefix = '?imageView2/2/h/440'
         this.event_group_template = row.event_group_template;//对应的事件组类型
         console.log('event_group_template', this.event_group_template)
         console.log('entityinput', this.entityinput);
-        this.showlabeledevent()
         this.labeledevent1 = {
           name:row.name,
           id:row.id
         }
         console.log('labeledevent1', this.labeledevent1)
-        //this.labeledeventchange()
+        this.labeledeventchange()
+        this.showlabeledevent()
       }
     },
     data() {
