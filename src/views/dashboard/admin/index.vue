@@ -1,8 +1,14 @@
 <template>
   <div class="dashboard-editor-container">
-    <github-corner class="github-corner" />
+    <!-- <github-corner class="github-corner" /> -->
 
-    <panel-group @handleSetLineChartData="handleSetLineChartData" />
+    <el-carousel :interval="6000" type="card" height="220px">
+      <el-carousel-item v-for="item in carouselImages" :key="item">
+        <img :src="item+carouselPrefix" class="image">
+      </el-carousel-item>
+    </el-carousel>
+
+    <!-- <panel-group @handleSetLineChartData="handleSetLineChartData" /> -->
 
     <el-row style="background:#fff;padding:16px 16px 0;margin-bottom:32px;">
       <line-chart :chart-data="lineChartData" />
@@ -41,8 +47,8 @@
 </template>
 
 <script>
-import GithubCorner from '@/components/GithubCorner'
-import PanelGroup from './components/PanelGroup'
+// import GithubCorner from '@/components/GithubCorner'
+// import PanelGroup from './components/PanelGroup'
 import LineChart from './components/LineChart'
 import RaddarChart from './components/RaddarChart'
 import PieChart from './components/PieChart'
@@ -51,6 +57,7 @@ import TransactionTable from './components/TransactionTable'
 import TodoList from './components/TodoList'
 import BoxCard from './components/BoxCard'
 
+const carouselPrefix = '?imageView2/2/h/440'
 const lineChartData = {
   newVisitis: {
     expectedData: [100, 120, 161, 134, 105, 160, 165],
@@ -73,8 +80,8 @@ const lineChartData = {
 export default {
   name: 'DashboardAdmin',
   components: {
-    GithubCorner,
-    PanelGroup,
+    // GithubCorner,
+    // PanelGroup,
     LineChart,
     RaddarChart,
     PieChart,
@@ -85,7 +92,14 @@ export default {
   },
   data() {
     return {
-      lineChartData: lineChartData.newVisitis
+      lineChartData: lineChartData.newVisitis,
+      carouselImages: [
+        'https://wpimg.wallstcn.com/9679ffb0-9e0b-4451-9916-e21992218054.jpg',
+        'https://wpimg.wallstcn.com/bcce3734-0837-4b9f-9261-351ef384f75a.jpg',
+        'https://wpimg.wallstcn.com/d1d7b033-d75e-4cd6-ae39-fcd5f1c0a7c5.jpg',
+        'https://wpimg.wallstcn.com/50530061-851b-4ca5-9dc5-2fead928a939.jpg'
+      ],
+      carouselPrefix
     }
   },
   methods: {

@@ -3448,40 +3448,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         activeName: '4',
         activeName1: '4',
         activeName2: '4',
-        statistics: "姓名: 张三,李四,王五---电话号码: 156496845936,16549846536---支付宝号: 156496845936,16549846536---微信: 56449996465465,45644984932161654,4748489484844,7898791316461---QQ: 1564649987,1654654965,1656498498---银行卡号: 356465494965649489---",
-        entityTableData: [
-          {
-            entityContent: '福建人',
-            entityType: '籍贯'
-          }, {
-            entityContent: '广东人',
-            entityType: '籍贯'
-          }, {
-            entityContent: '河南人',
-            entityType: '籍贯'
-          }, {
-            entityContent: '上海人',
-            entityType: '籍贯'
-          }, {
-            entityContent: '广东人',
-            entityType: '籍贯'
-          }, {
-            entityContent: '河南人',
-            entityType: '籍贯'
-          }, {
-            entityContent: '上海人',
-            entityType: '籍贯'
-          }, {
-            entityContent: '广东人',
-            entityType: '籍贯'
-          }, {
-            entityContent: '河南人',
-            entityType: '籍贯'
-          }, {
-            entityContent: '上海人',
-            entityType: '籍贯'
-          }
-        ],
+        entityTableData: [],
         multipleSelection: [],
         Dictionary_annotation: false,
         Model_annotation: false,
