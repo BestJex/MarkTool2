@@ -184,7 +184,8 @@ export default {
             state: row.state,
             epochid: row.id,
             template_type: row.template_type,
-            projectid: row.project
+            projectid: row.project,
+            state_data: row.annotate_progress.state_data
           }
         })
       } else {

@@ -751,6 +751,7 @@
             </el-button>
           </div>
           <el-button
+            v-if="state_data[docid].state=='UNDO' || state_data[docid].state=='RE_ANNOTATING'"
             type="primary"
             style="text-align:center"
             icon="el-icon-check"
@@ -951,7 +952,9 @@ const carouselPrefix = '?imageView2/2/h/440'
       this.template_type = this.$route.query.template_type
       this.projectid = this.$route.query.projectid
       this.userid = this.$store.getters.userid
-      console.log('projectid',this.projectid);
+      this.state_data = this.$route.query.state_data
+      console.log('projectid',this.projectid)
+      console.log('doc state data', this.state_data)
       
       // console.log('getters', this.$store.state);
       // console.log(JSON.stringify(this.$store.state.tagsView));
@@ -2549,6 +2552,9 @@ const carouselPrefix = '?imageView2/2/h/440'
         this.confirmregularuse = false
       },
       submit(){
+        console.log('the doc state', this.state_data[this.docid].doc, this.state_data[this.docid].state)
+        this.state_data[this.docid].state = 'SUBMIT'
+        console.log('the doc  changed state', this.state_data[this.docid].doc, this.state_data[this.docid].state)
           const data = {
             id:this.tableData[this.docid].id,
             list:{
@@ -2560,6 +2566,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             .then((response) => {
               this.$message({ message: '已提交！', type: 'success' });
             })
+
           //   const data1 = {
           //   id:this.tableData[this.docid].id,
           //   list:{
@@ -3344,6 +3351,7 @@ const carouselPrefix = '?imageView2/2/h/440'
     },
     data() {
       return {
+        state_data:[],
         entity_id_name_list:[],
         entity_template_name_list:[],
         deleteevent1:false,

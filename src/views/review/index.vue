@@ -162,7 +162,8 @@ export default {
             state: row.state,
             epochid: row.id[0],
             template_type: row.template_type,
-            projectid: row.project
+            projectid: row.project,
+            state_data: row.review_progress.state_data
           }
         })
       } else {

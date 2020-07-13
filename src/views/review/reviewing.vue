@@ -751,6 +751,7 @@
             </el-button>
           </div>
           <el-button
+            v-if="state_data[docid].state=='UNDO'"
             type="primary"
             style="text-align:center"
             icon="el-icon-check"
@@ -952,7 +953,9 @@ const carouselPrefix = '?imageView2/2/h/440'
       this.template_type = this.$route.query.template_type
       this.projectid = this.$route.query.projectid
       this.userid = this.$store.getters.userid
+      this.state_data = this.$route.query.state_data
       console.log('projectid',this.projectid);
+      console.log('review doc state data', this.state_data)
       
       // console.log('getters', this.$store.state);
       // console.log(JSON.stringify(this.$store.state.tagsView));
@@ -2546,6 +2549,9 @@ const carouselPrefix = '?imageView2/2/h/440'
         this.confirmregularuse = false
       },
       submit(){
+        console.log('the review doc state', this.state_data[this.docid].doc, this.state_data[this.docid].state)
+        this.state_data[this.docid].state = 'FINISH'
+        console.log('the review doc changed state', this.state_data[this.docid].doc, this.state_data[this.docid].state)
           const data = {
             id:this.tableData[this.docid].id,
             list:{
@@ -2553,7 +2559,7 @@ const carouselPrefix = '?imageView2/2/h/440'
               role:3
             }
           }
-          this.$store.dispatch('user/labelconfirm', data)
+          this.$store.dispatch('reviewer/labelconfirm', data)
             .then((response) => {
               this.$message({ message: '已提交！', type: 'success' });
             })
@@ -3341,6 +3347,7 @@ const carouselPrefix = '?imageView2/2/h/440'
     },
     data() {
       return {
+        state_data:[],
         entity_id_name_list:[],
         deleteevent1:false,
         tipscontent:'',

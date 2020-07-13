@@ -20,3 +20,11 @@ export function getrelabel(docid, userid) {
     method: 'get'
   })
 }
+
+export function labelconfirm(docid, data) {
+  return request({
+    url: '/api/projects/docs/' + docid + '/review/confirmations/',
+    method: 'post',
+    data: data
+  })
+}
