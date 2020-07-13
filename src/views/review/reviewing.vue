@@ -1564,7 +1564,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             list:{
               doc:this.tableData[this.docid].id,
               user:this.userid,
-              role:2,
+              role:3,
               classification_template:this.labeledclass.id
             }
           }
@@ -1608,7 +1608,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         //   list:{
         //     doc:this.tableData[this.docid].id,
         //     user:this.userid,
-        //     role:2,
+        //     role:3,
         //     event_group_template:this.labeledevent.id
         //   }
         // }
@@ -1629,7 +1629,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           list:{
             doc:this.tableData[this.docid].id,
             user:this.userid,
-            role:2,
+            role:3,
             event_group_template:this.labeledevent.id
           }
         }
@@ -2306,7 +2306,7 @@ const carouselPrefix = '?imageView2/2/h/440'
             content:content,
             entity_template:this.selectvalue[1].id,
             user:this.userid,
-            role:2
+            role:3
           }
         }
         this.$store.dispatch('user/labelentity', data)
@@ -2350,7 +2350,7 @@ const carouselPrefix = '?imageView2/2/h/440'
         //     content:content,
         //     entity_template:this.selectvalue[1].id,
         //     user:3,
-        //     role:2
+        //     role:3
         //   }
         // }
         // this.$store.dispatch('user/labelentity', data1)
@@ -2567,7 +2567,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           //   id:this.tableData[this.docid].id,
           //   list:{
           //     user:3,
-          //     role:2
+          //     role:3
           //   }
           // }
           // this.$store.dispatch('user/labelconfirm', data1)
