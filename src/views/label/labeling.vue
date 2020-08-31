@@ -560,7 +560,7 @@
             </div>
           </div>
           <div v-if="template_type=='EVENT'">
-            选择事件组：
+            create:
             <el-select
               v-model="labeledevent"
               placeholder="选择事件组"
@@ -580,7 +580,7 @@
               circle
               @click="addlabeledevent()"
             />
-            已创建的事件组：
+            delete:
             <el-select
               v-model="labeledevent1"
               placeholder="选择已创建的事件组"

@@ -531,6 +531,14 @@
           class="box-card"
           style="min-height:300px"
         >
+          <el-row>
+            <div style="text-align: center">
+              <span>当前标注所属：{{ current_role }}</span>
+              <el-button type="primary" plain round @click="updateRole()">审核者</el-button>
+              <el-button type="success" plain round @click="getAnnotatorsResult(doc_annotators[0])">A标注</el-button>
+              <el-button type="success" plain round @click="getAnnotatorsResult(doc_annotators[1])">B标注</el-button>
+            </div>
+          </el-row>
           <div v-if="template_type=='CLASSIFICATION'">
             分类标签：<el-select
               v-if="labeledclass==''"
@@ -560,7 +568,7 @@
             </div>
           </div>
           <div v-if="template_type=='EVENT'">
-            选择事件组：
+            create:
             <el-select
               v-model="labeledevent"
               placeholder="选择事件组"
@@ -580,7 +588,7 @@
               circle
               @click="addlabeledevent()"
             />
-            已创建的事件组：
+            delete:
             <el-select
               v-model="labeledevent1"
               placeholder="选择已创建的事件组"
@@ -1385,7 +1393,16 @@ const carouselPrefix = '?imageView2/2/h/440'
           // }
           this.showdata = this.tableData[0].content
           console.log('n',this.tableData);
-          
+          //console.log('doc_init_id',this.docid)
+          const data = {
+            docid:this.tableData[this.docid].id
+          }
+          this.$store.dispatch('reviewer/getAnnotators', data)
+            .then((response) => {
+              const list = response
+              this.doc_annotators = list
+              console.log('doc_annotators',this.doc_annotators)
+            })
         })
       },
       getEntitys(){
@@ -1798,6 +1815,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           this.tabactiveName = '实体统计'
           this.updatedoc()
           this.showdata = this.tableData[this.docid].content
+          this.updateAnnotator()
         }
         // this.showdata = this.tableData[this.docid].content
       },
@@ -1819,6 +1837,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           this.tabactiveName = '实体统计'
           this.updatedoc()
           this.showdata = this.tableData[this.docid].content
+          this.updateAnnotator()
         }
         // this.showdata = this.tableData[this.docid].content
       },
@@ -1837,7 +1856,226 @@ const carouselPrefix = '?imageView2/2/h/440'
         this.showdata = this.tableData[id].content
         this.activeName = ''
         this.tabactiveName = '实体统计'
+        this.updateAnnotator()
         this.updatedoc()
+      },
+      updateAnnotator(){
+        const data = {
+          docid:this.tableData[this.docid].id
+        }
+        this.$store.dispatch('reviewer/getAnnotators', data)
+          .then((response) => {
+            const list = response
+            this.doc_annotators = list
+            console.log('doc_annotators',this.doc_annotators)
+          })
+      },
+      updateRole(){
+        this.current_role = '审核者'
+        this.updatedoc()
+      },
+      getAnnotatorsResult(annotator_id){
+        console.log('annotator_id',annotator_id)
+        this.current_role = '标注者'
+        
+        if (this.template_type == 'NER') {
+          this.showdata = this.showdata = this.tableData[this.docid].content
+          this.entityinput =[]
+          this.labeledstandard = []
+          const data = {
+            docid:this.tableData[this.docid].id,
+            userid:annotator_id
+          }
+          this.$store.dispatch('user/getuserlabel', data)
+            .then((response) => {
+              console.log('标注者',annotator_id,'实体标注结果',response)
+              const list = response
+              this.entityinput = list
+              var addcontent = []
+              var addlist = []
+              for (let i = 0; i < list.length; i++) {
+                var content = list[i].content 
+                var end_offset = list[i].end_offset
+                //console.log(that.showdata);
+                let index = 1
+                var color =''
+                //console.log(this.options);
+                if(index==1){
+                  addlist.push(list[i])
+                  for (let k = 0; k < this.options.length; k++) {
+                    for (let l = 0; l < this.options[k].children.length; l++) {
+                      if(this.options[k].children[l].id===list[i].entity_template){
+                        color = this.options[k].children[l].color
+                      }
+                    }
+                  }
+                  addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '"  endflag="' + list[i].end_offset + '" style="background:' +color+';color:' +this.isLight(color) +'">'+content+'<div class="deletelabel">x</div></div>')   
+                }         
+              }
+              var str_new = "";
+              for (let i = 0; i < addcontent.length; i++) {
+                var start = 0
+                if (i>0) {
+                  start = list[i].start_offset
+                }
+                if (i<addcontent.length-1){
+                  str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset,addlist[i+1].start_offset)
+                } else {
+                  str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset)
+                  this.showdata = str_new
+                }
+              }
+            })
+        } else if(this.template_type == 'CLASSIFICATION'){
+          const data = {
+            docid:this.tableData[this.docid].id,
+            userid:annotator_id
+          }
+          this.$store.dispatch('user/getuserlabel', data)
+            .then((response) => {
+              console.log('标注者',annotator_id,'分类标注结果',response,this.options)
+              if (response.length < 1) {
+                this.labeledclass = ''
+              } else {
+                this.labeledclass = {}
+                this.labeledclass.id = response[0].classification_template
+                this.labeledclass.classid = response[0].id
+                for (let i = 0; i < this.options.length; i++) {
+                  if (this.labeledclass.id === this.options[i].id) {
+                    this.labeledclass.color = this.options[i].color
+                    this.labeledclass.name = this.options[i].name
+                  }
+                }
+                console.log('1121',this.labeledclass)
+                
+              }
+            })
+        } else if(this.template_type == 'EVENT'){
+          this.showdata = this.showdata = this.tableData[this.docid].content
+          this.eventoptions = []
+          this.entityinput = []
+          this.labeledeventoptions = []
+          const data = {
+            docid:this.tableData[this.docid].id,
+            userid:annotator_id
+          }
+          this.$store.dispatch('user/getuserlabel', data)
+            .then((response) => {
+              console.log('标注者',annotator_id,'事件标注结果',response,this.options)
+              if (response.length < 1) {
+                this.labeledevent = ''
+              } else {
+                for (let i = 0; i < response.length; i++) {
+                  if (this.tableData[this.docid].id === response[i].doc) {
+                    this.labeledevent = {}
+                    this.labeledevent.id = response[i].event_group_template
+                    this.labeledevent.eventid = response[i].id
+                    for (let i = 0; i < this.options.length; i++) {
+                      if (this.labeledevent.id === this.options[i].id) {
+                        this.labeledevent.name = this.options[i].name
+                      }
+                    }
+                  }
+                }
+                for (let i = 0; i < this.options.length; i++) {
+                  for (let j = 0; j < response.length; j++) {
+                    if (response[j].event_group_template === this.options[i].id){
+                      response[j].name = this.options[i].name+response[j].id
+                    }
+                  }
+                }
+                this.labeledeventoptions = response
+                console.log('labelaaaaa',this.labeledeventoptions,this.labeledevent1);
+                if (this.labeledeventoptions.length!=0&&this.labeledevent1.name==="") {
+                  this.labeledevent1 = {
+                    id:this.labeledeventoptions[0].id,
+                    name:this.labeledeventoptions[0].name
+                  }
+                }
+                 for (let m = 0; m < this.labeledeventoptions.length; m++) {
+                  if(this.labeledeventoptions[m].id===this.labeledevent1.id){
+                    this.entityinput = this.labeledeventoptions[m].entities
+                    this.showlabeledevent()
+                  }
+                }
+                
+                var eventname = this.labeledevent1.name.split(this.labeledevent1.id)
+                if(this.itemlabel===''){
+                  console.log('fafafa',this.itemlabel);
+                  this.itemlabel = eventname[0]
+                }
+                for (let i = 0; i < this.options.length; i++) {
+                  if (eventname[0]===this.options[i].name && this.eventoptions.length===0) {
+                    this.eventoptions.push(this.options[i])
+                  }
+                }
+                this.showlabeledstandard(eventname[0])
+                console.log('xxxxxxa',this.labeledeventoptions);
+              }
+            })
+        } else if(this.template_type == 'RE'){
+          this.showdata = this.showdata = this.tableData[this.docid].content
+          this.labeledstandard = []
+          this.entityinput =[]
+          this.labeledre = []
+          const data = {
+            docid:this.tableData[this.docid].id,
+            userid:annotator_id
+          }
+          this.$store.dispatch('user/getuserlabel', data)
+            .then((response) => {
+              console.log('标注者',annotator_id,'关系标注结果',response)
+              const list = response.entities
+              this.entityinput = list
+              var addcontent = []
+              var addlist = []
+              for (let i = 0; i < list.length; i++) {
+                var content = list[i].content 
+                var end_offset = list[i].end_offset
+                console.log('enterlist',list[i]);
+                let index = 1
+                var color =''
+                if(index==1){
+                  addlist.push(list[i])
+                  for (let k = 0; k < this.options.length; k++) {
+                    for (let l = 0; l < this.options[k].children.length; l++) {
+                      if(this.options[k].children[l].id===list[i].entity_template){
+                        color = this.options[k].children[l].color
+                      }
+                    }
+                  }
+                  addcontent.push('<div class="labelstyle" name="' + list[i].start_offset + '" endflag="' + list[i].end_offset + '" style="background:' +color+';color:' +this.isLight(color)+'">'+content+'<div class="deletelabel">x</div></div>')   
+                }         
+              }
+              var str_new = "";
+              for (let i = 0; i < addcontent.length; i++) {
+                var start = 0
+                if (i>0) {
+                  start = list[i].start_offset
+                }
+                if (i<addcontent.length-1){
+                  str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset,addlist[i+1].start_offset)
+                } else {
+                  str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset)
+                  this.showdata = str_new
+                }
+              }
+              
+              const relist = response.relations
+              for (let k = 0; k < relist.length; k++) {
+                for (let i = 0; i < this.entityinput.length; i++) {
+                  if (relist[k].start_entity === this.entityinput[i].id) {
+                    relist[k].start_name = this.entityinput[i].content
+                  }
+                  if (relist[k].end_entity === this.entityinput[i].id) {
+                    relist[k].end_name = this.entityinput[i].content
+                  }
+                }
+              }
+              this.labeledre = relist
+              console.log('labeledre',this.labeledre,this.entityinput);
+            })
+        }
       },
       getlabeledeventoptions(){
         const data = {
@@ -2131,56 +2369,7 @@ const carouselPrefix = '?imageView2/2/h/440'
           this.labeledeventoptions = []
           // this.labeledevent1 = {}
           // this.activeName = ''
-          this.getlabeledeventoptions()
-          
-                // this.entityinput = response[0].entities
-                // var addcontent = []
-                // var addlist = []
-                // for (let i = 0; i < response[0].entities.length; i++) {
-                //   var content = response[0].entities[i].content 
-                //   //console.log(that.showdata);
-                //   let index = 1
-                //   for (let j = 0; j < i; j++) {
-                //   if(content==response[0].entities[j].content)
-                //     index=0
-                //   }
-                //   var color =''
-                //   if(index==1){
-                //     addlist.push(response[0].entities[i])
-                //     for (let k = 0; k < this.options.length; k++) {
-                //       for (let l = 0; l < this.options[k].children.length; l++) {
-                //         if(this.options[k].children[l].id===response[0].entities[i].entity_template){
-                //           color = this.options[k].children[l].color
-                //         }
-                //       }
-                //     }
-                //     // var str = this.showdata.split(content);
-                //     // var str_new = "";
-                //     // for (let index = 0; index < str.length-1; index++) {
-                //     //   str_new += str[index]+'<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>';
-                //     // }
-                //     addcontent.push('<div class="labelstyle" style="background:' +color+'">'+content+'<div class="deletelabel">x</div></div>') 
-
-                //     // str_new += str[str.length-1]
-                //     // this.showdata = str_new;   
-                //   }         
-                // }
-                // var str_new = "";
-                // for (let i = 0; i < addcontent.length; i++) {
-                //   var start = 0
-                //   if (i>0) {
-                //     start = list[i].start_offset
-                //   }   
-                //   if (i<addcontent.length-1){
-                //     str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset+1,addlist[i+1].start_offset-1)
-                //   } else {
-                //     str_new += this.tableData[this.docid].content.slice(start,addlist[i].start_offset) + addcontent[i] + this.tableData[this.docid].content.slice(addlist[i].end_offset+1)
-                //     this.showdata = str_new
-                //   }
-                // }       
-                
-                
-            
+          this.getlabeledeventoptions()  
         } else if(this.template_type == 'RE'){
           this.showdata = this.showdata = this.tableData[this.docid].content
           this.labeledstandard = []
@@ -3347,6 +3536,8 @@ const carouselPrefix = '?imageView2/2/h/440'
     },
     data() {
       return {
+        current_role:'审核者',
+        doc_annotators:[],
         state_data:[],
         entity_id_name_list:[],
         deleteevent1:false,

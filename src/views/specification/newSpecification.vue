@@ -649,7 +649,7 @@ export default {
         'name': 'CLASSFISDF',
         'template_type': 'CLASSIFICATION',
         'create_date': '2019-12-26T02:58:46.729977Z',
-        'url': 'http://172.20.46.190:10000/api/templates/13/'
+        'url': '/api/templates/13/'
       },
       newgroupoutput: {
         id: 13,

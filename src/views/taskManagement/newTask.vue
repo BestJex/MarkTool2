@@ -577,8 +577,9 @@ export default {
         const data = {
           name: this.form1.taskTitle,
           project_type: this.form1.taskType,
-          template: 'http://172.20.46.190:10000/api/templates/' + this.templateid + '/'
+          template: '/api/templates/' + this.templateid + '/'
         }
+        console.log('new task', data)
         this.$store.dispatch('project/newProject', data)
           .then((response) => {
             console.log(response)

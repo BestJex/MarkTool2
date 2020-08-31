@@ -30,7 +30,7 @@
       </el-table-column>
       <el-table-column
         label="任务名称"
-        min-width="80"
+        min-width="200"
       >
         <template slot-scope="scope">
           <div
@@ -39,6 +39,14 @@
           >
             <span>{{ scope.row.missionName }}</span>
           </div>
+        </template>
+      </el-table-column>
+      <el-table-column
+        label="任务类型"
+        min-width="120"
+      >
+        <template slot-scope="scope">
+          <span>{{ scope.row.template_type }}</span>
         </template>
       </el-table-column>
       <el-table-column
@@ -51,7 +59,7 @@
       </el-table-column>
       <el-table-column
         label="已标注条数"
-        min-width="100"
+        min-width="80"
       >
         <template slot-scope="scope">
           <span>{{ scope.row.annotate_progress.waiting_num }}</span>
@@ -59,8 +67,7 @@
       </el-table-column>
       <el-table-column
         label="总标注条数"
-        min-width="120"
-        sortable
+        min-width="80"
       >
         <template slot-scope="scope">
           <span>{{ scope.row.annotate_progress.total_num }}</span>

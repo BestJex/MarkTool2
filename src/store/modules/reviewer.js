@@ -1,4 +1,4 @@
-import { getreepoch, getredoc, getrelabel, labelconfirm } from '@/api/reviewer'
+import { getreepoch, getredoc, getrelabel, getAnnotators, labelconfirm } from '@/api/reviewer'
 
 const state = {
   reviewerid: '',
@@ -52,6 +52,18 @@ const actions = {
     const userid = list.userid
     return new Promise((resolve, reject) => {
       getrelabel(docid, userid).then(response => {
+        // console.log(response)
+        const data = response
+        resolve(data)
+      }).catch(error => {
+        reject(error)
+      })
+    })
+  },
+  getAnnotators({ commit, state }, list) {
+    const docid = list.docid
+    return new Promise((resolve, reject) => {
+      getAnnotators(docid).then(response => {
         // console.log(response)
         const data = response
         resolve(data)

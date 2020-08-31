@@ -21,6 +21,13 @@ export function getrelabel(docid, userid) {
   })
 }
 
+export function getAnnotators(docid) {
+  return request({
+    url: '/api/projects/docs/' + docid + '/annotators/',
+    method: 'get'
+  })
+}
+
 export function labelconfirm(docid, data) {
   return request({
     url: '/api/projects/docs/' + docid + '/review/confirmations/',
