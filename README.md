@@ -1,11 +1,8 @@
-# MarkTool
-标注工具平台 
-
-# clone the project
-git clone https://github.com/FXLP/MarkTool.git
+# MarkTool2
+文本标注工具-含审核者版 
 
 # enter the project directory
-cd MarkTool
+cd MarkTool2
 
 # install dependency
 npm install
