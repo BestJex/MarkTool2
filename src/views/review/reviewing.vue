@@ -641,6 +641,19 @@
                       </div>
                     </template>
                   </el-table-column>
+                  <el-table-column
+                    label="合并结果来源"
+                    width="360"
+                  >
+                    <template slot-scope="scope">
+                      <div slot="reference" class="name-wrapper">
+                        <el-tag v-if="scope.row.source == 0" type="success" size="medium">{{ source_state[scope.row.source] }}</el-tag>
+                        <el-tag v-if="scope.row.source == 1" type="info" size="medium">{{ source_state[scope.row.source] }}</el-tag>
+                        <el-tag v-if="scope.row.source == 2" type="warning" size="medium">{{ source_state[scope.row.source] }}</el-tag>
+                        <el-tag v-if="scope.row.source == 3" type="danger" size="medium">{{ source_state[scope.row.source] }}</el-tag>
+                      </div>
+                    </template>
+                  </el-table-column>
                   <el-table-column label="操作">
                     <template slot-scope="scope">
                       <el-button
@@ -3536,6 +3549,7 @@ const carouselPrefix = '?imageView2/2/h/440'
     },
     data() {
       return {
+        source_state:['AB一致', '只含A标注', '只含B标注 ', 'AB不一致'],
         current_role:'审核者',
         doc_annotators:[],
         state_data:[],
