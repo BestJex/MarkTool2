@@ -171,7 +171,7 @@
                 分类标签：
               </div>
               <div
-                v-for="(cls) in options"
+                v-for="(cls) in classoptions"
                 :key="cls.id"
                 style="display:inline-block"
               >
@@ -539,7 +539,7 @@
               @change="classchange"
             >
               <el-option
-                v-for="item in options"
+                v-for="item in classoptions"
                 :key="item.name"
                 :label="item.name"
                 :value="{name:item.name,color:item.color,id:item.id}"
@@ -1507,10 +1507,10 @@ const carouselPrefix = '?imageView2/2/h/440'
           console.log('entity_id_name_list', this.entity_id_name_list)
         })
       },
-      getclass() {
+      getclass() { //2020.11.13 debug[lyp]
         this.$store.dispatch('project/getClass',this.template).then((response) =>{
           console.log('class',response)
-          this.options = response
+          this.classoptions = response
           this.updatedoc()
         })
       },
@@ -3351,6 +3351,7 @@ const carouselPrefix = '?imageView2/2/h/440'
     },
     data() {
       return {
+        classoptions:[],
         state_data:[],
         entity_id_name_list:[],
         entity_template_name_list:[],
